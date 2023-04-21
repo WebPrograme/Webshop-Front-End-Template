@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webshop</title>
+
+    <link rel="stylesheet" href="/plugins/Yarn/yarn.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav nav-sticky">
+		<input type="checkbox" id="nav-hamburger-toggle" />
+		<label for="nav-hamburger-toggle" class="nav-hamburger">
+			<span class="nav-bar"></span>
+		</label>
+
+        <div class="nav-brand">
+            <a href="#">Webshop</a>
+        </div>
+
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/index.html" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item">
+                <a href="shop.html" class="nav-link">Shop</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Contact</a>
+            </li>
+            <li class="nav-item account-user">
+                <div class="dropdown">
+                    <a href="#" class="nav-link btn-dropdown" for="account-dropdown"><i class="fa-solid fa-user"></i></a>
+
+                    <div class="dropdown-menu" id="account-dropdown">
+                        <a href="#" class="dropdown-item">Login</a>
+                        <a href="#" class="dropdown-item">Register</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item account-login">
+                <a href="#" class="nav-link nav-link-active">Login</a>
+            </li>
+        </ul>
+        
+        <ul class="nav-list nav-mobile">
+            <li class="nav-item">
+                <a href="#" class="nav-link nav-link-active">Home</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Shop</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Contact</a>
+            </li>
+        </ul>
+    </nav>
+
+    
+    <div class="body-center">
+        <div class="login-form">
+            <h1>Login</h1>
+
+            <label for="Email">Email</label>
+            <input class="input" type="text" placeholder="Email" name="Email" />
+            <label for="Password">Password</label>
+            <div class="show-password">
+                <input class="input" type="password" placeholder="Password" name="Password" />
+                <i class="fa-solid fa-eye"></i>
+            </div>
+            <div class="input-line align-center">
+                <input class="input" type="checkbox" name="Remember" id="Remember" />
+                <label for="Remember">Remember me</label>
+            </div>
+
+            <button class="btn btn-primary btn-lg login-btn">Login</button>
+            <p>Don't have an account? <a href="register.html">Register</a></p>
+        </div>
+    </div>
+    
+    <script src="https://kit.fontawesome.com/62dc937956.js" crossorigin="anonymous"></script>
+    <script src="/plugins/Yarn/yarn.js"></script>
+    <script src="/js/account.js"></script>
+</body>
+</html>

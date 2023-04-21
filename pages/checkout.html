@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webshop</title>
+
+    <link rel="stylesheet" href="/plugins/Yarn/yarn.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav nav-sticky">
+		<input type="checkbox" id="nav-hamburger-toggle" />
+		<label for="nav-hamburger-toggle" class="nav-hamburger">
+			<span class="nav-bar"></span>
+		</label>
+
+        <div class="nav-brand">
+            <a href="#">Webshop</a>
+        </div>
+
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/index.html" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Shop</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Contact</a>
+            </li>
+
+            <li class="nav-item account-user">
+                <div class="dropdown">
+                    <a href="#" class="nav-link btn-dropdown" for="account-dropdown"><i class="fa-solid fa-user"></i></a>
+
+                    <div class="dropdown-menu" id="account-dropdown">
+                        <a href="#" class="dropdown-item" offcanvas="offcanvas-favorites"><i class="fa-solid fa-heart" offcanvas="offcanvas-favorites"></i> Favorites</a>
+                        <a href="/pages/orders.html" class="dropdown-item account-orders"><i class="fa-solid fa-box"></i> Orders</a>
+                        <a href="#" class="dropdown-item account-logout"><i class="fa-solid fa-right-from-bracket"></i>Logout</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item account-user" offcanvas="offcanvas-cart">
+                <a href="#" class="nav-link" offcanvas="offcanvas-cart"><i class="fa-solid fa-cart-shopping" offcanvas="offcanvas-cart"></i> <span class="cart-count" offcanvas="offcanvas-cart"></span></a>
+            </li>
+
+            <li class="nav-item account-login">
+                <a href="login.html" class="nav-link">Login</a>
+            </li>
+        </ul>
+        
+        <ul class="nav-list nav-mobile">
+            <li class="nav-item">
+                <a href="#" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item">
+                <a href="shop.html" class="nav-link nav-link-active">Shop</a>
+            </li>
+            <li class="nav-item">
+                <a href="contact.html" class="nav-link">Contact</a>
+            </li>
+
+            <li class="nav-item account-user">
+                <a href="#" class="nav-link"><i class="fa-solid fa-user"></i></a>
+            </li>
+            <li class="nav-item account-user">
+                <a href="#" class="nav-link"><i class="fa-solid fa-cart-shopping"></i></a>
+            </li>
+
+            <li class="nav-item account-login">
+                <a href="login.html" class="nav-link">Login</a>
+            </li>
+        </ul>
+    </nav>
+
+    
+    <div class="body-center">
+        <h1 class="text-center">Checkout</h1>
+
+        <div class="grid-center">
+            <div class="relogin-form">
+                <h1>Login</h1>
+
+                <label for="Email">Email</label>
+                <input class="input" type="text" placeholder="Email" name="Email" />
+                <label for="Password">Password</label>
+                
+                <div class="show-password">
+                    <input class="input" type="password" placeholder="Password" name="Password" />
+                    <i class="fa-solid fa-eye"></i>
+                </div>
+
+                <button class="btn btn-primary btn-lg relogin-btn">Login</button>
+            </div>
+        </div>
+
+        <div class="checkout-steps">
+            <div class="checkout-step checkout-step-active" step="1">
+                <div class="checkout-step-number">1</div>
+                <div class="checkout-step-title">Order</div>
+            </div>
+            <div class="checkout-step" step="2">
+                <div class="checkout-step-number">2</div>
+                <div class="checkout-step-title">Shipping</div>
+            </div>
+            <div class="checkout-step" step="3">
+                <div class="checkout-step-number">3</div>
+                <div class="checkout-step-title">Payment</div>
+            </div>
+        </div>
+
+        <div class="col-8 flex m-inline-auto column order checkout-step-content" step-content="1">
+            <div class="order-list">
+            </div>
+
+            <div class="order-footer mt-3">
+                <div class="order-footer-total">
+                    <h3 class="order-footer-total-title">Total</h3>
+                    <h3 class="order-footer-total-price">€ 0.00</>
+                </div>
+                <button class="btn btn-primary btn-lg order-btn">Order</button>
+            </div>
+        </div>
+
+        <div class="col-8 flex m-inline-auto column shipment checkout-step-content" step-content="2">
+            <h3 class="text-center checkout-step-content-title">Personal Information</h3>
+
+            <div class="input-group">
+                <div>
+                    <label class="label" for="FirstName">First Name</label>
+                    <input class="input" type="text" placeholder="First Name" name="FirstName" />
+                </div>
+                <div>
+                    <label class="label" for="LastName">Last Name</label>
+                    <input class="input" type="text" placeholder="Last Name" name="LastName" />
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div>
+                    <label class="label" for="Email">Email</label>
+                    <input class="input" type="text" placeholder="Email" name="Email" />
+                </div>
+                <div>
+                    <label class="label" for="Phone">Phone</label>
+                    <input class="input" type="text" placeholder="Phone" name="Phone" />
+                </div>  
+            </div>
+
+            <div class="input-group">
+                <div>
+                    <label class="label" for="Street">Street</label>
+                    <input class="input" type="text" placeholder="Street" name="Street" />
+                </div>
+                <div>
+                    <label class="label" for="Number">Number</label>
+                    <input class="input" type="text" placeholder="Number" name="Number" />
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div>
+                    <label class="label" for="PostalCode">Postal Code</label>
+                    <input class="input" type="text" placeholder="Postal Code" name="PostalCode" />
+                </div>
+                <div>
+                    <label class="label" for="City">City</label>
+                    <input class="input" type="text" placeholder="City" name="City" />
+                </div>
+            </div>
+
+            <a href="#" class="btn btn-primary btn-lg shipment-btn">Continue</a>
+        </div>
+
+        <div class="col-8 flex m-inline-auto column payment checkout-step-content" step-content="3">
+            <h3 class="text-center checkout-step-content-title">Choose a Method</h3>
+
+            <div class="payment-methods">
+                <a href="#" class="btn btn-secondary" method="Payconiq">
+                    <img src="/img/payconiq-horizontal-pos.png">
+                </a>
+
+                <a href="#" class="btn btn-secondary" method="Stripe">
+                    <i class="fa-brands fa-stripe"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="payment-payconiq">
+            <h3 class="text-center">Payconiq</h3>
+            <p class="text-center">Scan the QR code with the Payconiq app</p>
+            <h3 class="text-center payment-payconiq-price">€ 0.00</h3>
+
+            <div class="payment-payconiq-qr">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Payconiq%20QR%20Code%20Generator">
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://kit.fontawesome.com/62dc937956.js" crossorigin="anonymous"></script>
+    <script src="/plugins/Yarn/yarn.js"></script>
+    <script src="/js/account.js"></script>
+    <script src="/js/checkout.js"></script>
+</body>
+</html>

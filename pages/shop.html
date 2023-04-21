@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webshop</title>
+
+    <link rel="stylesheet" href="/plugins/Yarn/yarn.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav nav-sticky">
+		<input type="checkbox" id="nav-hamburger-toggle" />
+		<label for="nav-hamburger-toggle" class="nav-hamburger">
+			<span class="nav-bar"></span>
+		</label>
+
+        <div class="nav-brand">
+            <a href="#">Webshop</a>
+        </div>
+
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/index.html" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link nav-link-active">Shop</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Contact</a>
+            </li>
+
+            <li class="nav-item account-user">
+                <div class="dropdown">
+                    <a href="#" class="nav-link btn-dropdown" for="account-dropdown"><i class="fa-solid fa-user"></i></a>
+
+                    <div class="dropdown-menu" id="account-dropdown">
+                        <a href="#" class="dropdown-item" offcanvas="offcanvas-favorites"><i class="fa-solid fa-heart" offcanvas="offcanvas-favorites"></i> Favorites</a>
+                        <a href="/pages/orders.html" class="dropdown-item account-orders"><i class="fa-solid fa-box"></i> Orders</a>
+                        <a href="#" class="dropdown-item account-logout"><i class="fa-solid fa-right-from-bracket"></i>Logout</a>
+                    </div>
+                </div>
+            </li>
+            <li class="nav-item account-user" offcanvas="offcanvas-cart">
+                <a href="#" class="nav-link" offcanvas="offcanvas-cart"><i class="fa-solid fa-cart-shopping" offcanvas="offcanvas-cart"></i> <span class="cart-count" offcanvas="offcanvas-cart"></span></a>
+            </li>
+
+            <li class="nav-item account-login">
+                <a href="login.html" class="nav-link">Login</a>
+            </li>
+        </ul>
+        
+        <ul class="nav-list nav-mobile">
+            <li class="nav-item">
+                <a href="#" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item">
+                <a href="shop.html" class="nav-link nav-link-active">Shop</a>
+            </li>
+            <li class="nav-item">
+                <a href="contact.html" class="nav-link">Contact</a>
+            </li>
+
+            <li class="nav-item account-user">
+                <a href="#" class="nav-link"><i class="fa-solid fa-user"></i></a>
+            </li>
+            <li class="nav-item account-user">
+                <a href="#" class="nav-link"><i class="fa-solid fa-cart-shopping"></i></a>
+            </li>
+
+            <li class="nav-item account-login">
+                <a href="login.html" class="nav-link">Login</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="offcanvas m right" id="offcanvas-cart" overlay close-trough>
+        <div class="offcanvas-header">
+            <h1 class="offcanvas-title line-after">Cart</h1>
+            <i class="fas fa-times offcanvas-close"></i>
+        </div>
+        <div class="offcanvas-body cart-body">
+            <div class="cart-empty">
+                <h3 class="cart-empty-title">Your cart is empty</h3>
+            </div>
+
+            <div class="cart-items">
+            </div>
+
+            <div class="cart-footer">
+                <div class="flex justify-between">
+                    <h2>Total</h2>
+                    <h2 class="cart-total-price"></h2>
+                </div>
+
+                <a href="#" class="btn btn-primary btn-lg cart-checkout">Checkout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="offcanvas m right" id="offcanvas-favorites" overlay close-trough>
+        <div class="offcanvas-header">
+            <h1 class="offcanvas-title line-after">Favorites</h1>
+            <i class="fas fa-times offcanvas-close"></i>
+        </div>
+        <div class="offcanvas-body favorites-body">
+            <div class="favorites-empty">
+                <h3 class="favorites-empty-title">You don't have favorites</h3>
+            </div>
+
+            <div class="favorites-items">
+            </div>
+        </div>
+    </div>
+    
+    <div class="body-center">
+        <h1 class="title text-center">Shop</h1>
+        <div class="shop-container col-12 flex gap"></div>
+    </div>
+    
+    <script src="https://kit.fontawesome.com/62dc937956.js" crossorigin="anonymous"></script>
+    <script src="/plugins/Yarn/yarn.js"></script>
+    <script src="/js/account.js"></script>
+    <script src="/js/shop.js" type="module"></script>
+</body>
+</html>
