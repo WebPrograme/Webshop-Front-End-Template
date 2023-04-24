@@ -619,7 +619,111 @@ body:has(.offcanvas.open) {
 
 /* Orders */
 
-.order-items {
+.order-item {
+    color: var(--primary-text-color);
+}
+
+.order-item-image {
+    margin: 0;
+    padding: 0;
+    height: fit-content;
+}
+
+.order-item-content {
+    position: relative;
+    padding: 1rem 0rem 2rem 1rem;
+}
+
+.order-item-title {
+    color: var(--secondary-text-color);
+}
+
+.order-item-id {
+    color: var(--primary-text-color);
+}
+
+.order-item-status {
+    color: var(--success-color);
+}
+
+.order-item-shipment {
+    padding-top: 1rem;
+}
+
+.order-item-adress, .order-item-city {
+    padding-bottom: .5rem;
+    margin: 0;
+}
+
+.order-item-see-more {
+    display: block;
+    width: 100%;
+    text-align: center;
+    border-radius: .5rem;
+    cursor: pointer;
+    transition: background-color .2s ease;
+}
+
+.order-item-see-more:hover {
+    background-color: var(--secondary-btn-bg);
+}
+
+.order-item-see-more i {
+    padding: 1rem 0;
+    color: var(--primary-text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+    transition: transform .3s ease;
+}
+
+.order-item-see-more i.open {
+    transform: rotate(-180deg);
+}
+
+.order-item-products {
     display: none;
 }
 
+.order-item-products.open {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.order-item-product {
+    position: relative;
+    width: 25%;
+    text-align: center;
+    color: var(--primary-text-color);
+}
+
+.order-item-product-title {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    width: 100%;
+    background-color: rgba(var(--primary-bg-color-decimal), .8);
+    margin: 0;
+    padding-bottom: .2rem;
+}
+
+.order-item-product-quantity {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: var(--secondary-text-color);
+    background-color: var(--primary-bg-color);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15)   ;
+    border-radius: 50%;
+    min-width: 2.2rem;
+    aspect-ratio: 1/1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .order-item-image {
+        display: none;
+    }
+}

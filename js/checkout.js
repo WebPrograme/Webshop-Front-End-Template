@@ -117,39 +117,67 @@ function showOrder(account) {
                                 shipmentDetails[shipmentInput.name] = shipmentInput.value;
                             });
 
-                            document.querySelector('.checkout-step[step="3"]').classList.add('checkout-step-active');
+                            let totalPrice = 0;
+                            let promises = [];
 
-                            document.querySelector('[step-content="2"]').style.display = 'none';
-                            document.querySelector('[step-content="3"]').style.display = 'flex';
-
-                            document.querySelectorAll('.payment-methods a').forEach(function(paymentMethod) {
-                                paymentMethod.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    
-                                    // The payment itself is not implemented, so the user is redirected to the order confirmation page
-
+                            for (let productCart of cart) {
+                                promises.push(new Promise(function(resolve, reject) {
                                     const xhr = new XMLHttpRequest();
-                                    xhr.open('POST', 'http://localhost:8081/api/orders/add');
-                                    xhr.setRequestHeader('Content-Type', 'application/json');
-                                    xhr.send(JSON.stringify({
-                                        "Account": account,
-                                        "Order": {
-                                            "Products": account.Cart
-                                        },
-                                        "Shipment": shipmentDetails,
-                                        "Payment": {
-                                            "Method": paymentMethod.getAttribute('payment-method')
-                                        }
-                                    }));
+                                    xhr.open('GET', 'http://localhost:8081/api/products/' + productCart.ID);
+                                    xhr.send();
 
                                     xhr.onload = function() {
                                         if (xhr.status === 200) {
-                                            delete account.Cart;
+                                            let product = JSON.parse(xhr.response);
 
-                                            localStorage.setItem('account', JSON.stringify(account));
-                                            window.location.href = '/pages/orders.html';
+                                            Object.keys(productCart.Sizes).forEach(function(size, index) {
+                                                totalPrice += product.Price * productCart.Sizes[size]['Quantity'];
+                                            });
+
+                                            resolve();
                                         }
                                     }
+                                }));
+                            }
+
+                            Promise.all(promises).then(function() {
+                                console.log(totalPrice);
+
+                                document.querySelector('.checkout-step[step="3"]').classList.add('checkout-step-active');
+
+                                document.querySelector('[step-content="2"]').style.display = 'none';
+                                document.querySelector('[step-content="3"]').style.display = 'flex';
+
+                                document.querySelectorAll('.payment-methods a').forEach(function(paymentMethod) {
+                                    paymentMethod.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        
+                                        // The payment itself is not implemented, so the user is redirected to the order confirmation page
+
+                                        const xhr = new XMLHttpRequest();
+                                        xhr.open('POST', 'http://localhost:8081/api/orders/add');
+                                        xhr.setRequestHeader('Content-Type', 'application/json');
+                                        xhr.send(JSON.stringify({
+                                            "Account": account,
+                                            "Order": {
+                                                "Products": account.Cart
+                                            },
+                                            "Shipment": shipmentDetails,
+                                            "Price": totalPrice,
+                                            "Payment": {
+                                                "Method": paymentMethod.getAttribute('method')
+                                            },
+                                        }));
+
+                                        xhr.onload = function() {
+                                            if (xhr.status === 200) {
+                                                delete account.Cart;
+
+                                                localStorage.setItem('account', JSON.stringify(account));
+                                                window.location.href = '/pages/orders.html';
+                                            }
+                                        }
+                                    });
                                 });
                             });
                         } else {
