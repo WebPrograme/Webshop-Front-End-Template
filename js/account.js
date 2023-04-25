@@ -409,7 +409,7 @@ function login(account, rememberMe = false) {
             initializeCart(response);
             initializeFavorites(response);
         } else {
-            alert('Invalid login credentials');
+            new Toast('login-failed').show();
         }
     };
 }
@@ -424,10 +424,9 @@ function register(account) {
     
     xhr.onload = function() {
         if (xhr.status === 200) {
-            navAccount.style.display = 'block';
-            navLogin.style.display = 'none';
-
-            document.querySelector('.account-user .nav-link').innerHTML += account.Forname;
+            window.location.href = '/index.html';
+        } else if (xhr.status === 500 && xhr.response === 'Account already exists') {
+            new Toast('email-exists').show();
         }
     };
 }
@@ -461,14 +460,28 @@ if (loginBtn) {
     loginBtn.addEventListener('click', (e) => {
         e.preventDefault();
 
-        const email = document.querySelector('[name=Email]').value;
-        const password = document.querySelector('[name=Password]').value;
-        const rememberMe = document.querySelector('[name=Remember]').checked;
+        let email = document.querySelector('[name=Email]').value;
+        let password = document.querySelector('[name=Password]').value;
+        let rememberMe = document.querySelector('[name=Remember]').checked;
+        
+        if (email == '') {
+            document.querySelector('[name=Email]').classList.add('input-error');
+        } else {
+            document.querySelector('[name=Email]').classList.remove('input-error');
+        }
 
-        login({
-            "Email": email,
-            "Password": password
-        }, rememberMe);
+        if (password=== '') {
+            document.querySelector('[name=Password]').classList.add('input-error');
+        } else {
+            document.querySelector('[name=Password]').classList.remove('input-error');
+        }
+
+        if (email != '' && password != '') {
+            login({
+                "Email": email,
+                "Password": password
+            }, rememberMe);
+        }
     });
 }
 
@@ -476,22 +489,60 @@ if (registerBtn) {
     registerBtn.addEventListener('click', (e) => {
         e.preventDefault();
 
-        const forname = document.getElementById('FirstName').value;
-        const surname = document.getElementById('LastName').value;
-        const email = document.getElementById('Email').value;
-        const password = document.getElementById('Password').value;
-        const phone = document.getElementById('Phonenumber').value;
-        const address = document.getElementById('Address').value;
+        let forname = document.getElementById('FirstName').value;
+        let surname = document.getElementById('LastName').value;
+        let email = document.getElementById('Email').value;
+        let password = document.getElementById('Password').value;
+        let phone = document.getElementById('Phonenumber').value;
+        let address = document.getElementById('Address').value;
 
-        register({
-            "Forname": forname,
-            "Surname": surname,
-            "Email": email,
-            "Password": password,
-            "Phone": phone,
-            "Address": address,
-            "Name": forname + ' ' + surname
-        });
+        if (forname == '') {
+            document.getElementById('FirstName').classList.add('input-error');
+        } else {
+            document.getElementById('FirstName').classList.remove('input-error');
+        }
+
+        if (surname == '') {
+            document.getElementById('LastName').classList.add('input-error');
+        } else {
+            document.getElementById('LastName').classList.remove('input-error');
+        }
+
+        if (email == '') {
+            document.getElementById('Email').classList.add('input-error');
+        } else {
+            document.getElementById('Email').classList.remove('input-error');
+        }
+
+        if (password == '') {
+            document.getElementById('Password').classList.add('input-error');
+        } else {
+            document.getElementById('Password').classList.remove('input-error');
+        }
+
+        if (phone == '') {
+            document.getElementById('Phonenumber').classList.add('input-error');
+        } else {
+            document.getElementById('Phonenumber').classList.remove('input-error');
+        }
+
+        if (address == '') {
+            document.getElementById('Address').classList.add('input-error');
+        } else {
+            document.getElementById('Address').classList.remove('input-error');
+        }
+
+        if (forname != '' && surname != '' && email != '' && password != '' && phone != '' && address != '') {
+            register({
+                "Forname": forname,
+                "Surname": surname,
+                "Email": email,
+                "Password": password,
+                "Phone": phone,
+                "Address": address,
+                "Name": forname + ' ' + surname
+            });
+        }
     });
 }
 
