@@ -25,53 +25,49 @@ xhr.send();
 xhr.onload = function() {
     const products = JSON.parse(xhr.response);
 
-    const searchCategory = new URLSearchParams(window.location.search).get('category');
+    let searchCategory = new URLSearchParams(window.location.search).get('category');
     let categoryCells = []
 
     for (var productID in products) {
         const product = products[productID];
 
-        if (searchCategory && (product['Categories'] === undefined || product['Categories'][searchCategory] === undefined)) {
-            continue;
-        }
-        
-        if (!categoryCells.includes(searchCategory)) {
-            let productCategory = document.createElement('div');
-            productCategory.classList.add('product-category');
-            productCategory.style.backgroundColor = '#' + product.Categories[searchCategory];
-            productCategory.setAttribute('data-color-id', product.Categories[searchCategory]);
-    
-            let productCategoryLabel = document.createElement('span');
-            productCategoryLabel.innerHTML = searchCategory;
-
-            let productCategoryDelete = document.createElement('span');
-            productCategoryDelete.classList.add('product-category-delete');
-            productCategoryDelete.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-    
-            productCategory.appendChild(productCategoryLabel);
-            productCategory.appendChild(productCategoryDelete);
-
-    
-            document.querySelector('.search-categories').appendChild(productCategory);
-
-            categoryCells.push(searchCategory);
-        }
-
         let productCard = document.createElement('a');
-        productCard.classList.add('card', 'product-card', 'col-3');
+        productCard.classList.add('card', 'product-card');
         productCard.setAttribute('data-search', 'true');
         productCard['href'] = `product.html?id=${productID}`;
+
+        let productCardCategories = document.createElement('div');
+        productCardCategories.classList.add('card-categories');
 
         if (product.Categories !== undefined) {
             Object.keys(product.Categories).forEach(category => {
                 productCard.setAttribute(`data-${category}`, product.Categories[category])
+
+                let productCategory = document.createElement('div');
+                productCategory.classList.add('product-category');
+                productCategory.style.backgroundColor = '#' + product.Categories[category];
+        
+                let productCategoryLabel = document.createElement('span');
+                productCategoryLabel.innerHTML = category;
+    
+                productCategory.appendChild(productCategoryLabel);
+    
+                categoryCells.push(searchCategory);
+                productCardCategories.appendChild(productCategory);
             });
         }
+
+        let productImageContainer = document.createElement('div');
+        productImageContainer.classList.add('card-image-container');
 
         let productImage = document.createElement('img');
         productImage.classList.add('card-image');
         productImage.src = product.Images[0];
         productImage.alt = product.Name;
+
+        let productCardSizes = document.createElement('div');
+        productCardSizes.classList.add('card-sizes');
+        productCardSizes.innerHTML = '<h4>' + Object.keys(product.Sizes).join(' | ') + '</h4>';
 
         let productCardBody = document.createElement('div');
         productCardBody.classList.add('card-body');
@@ -82,10 +78,6 @@ xhr.onload = function() {
         let productCardTitle = document.createElement('h3');
         productCardTitle.classList.add('card-title');
         productCardTitle.innerHTML = product.Name;
-
-        let productCardText = document.createElement('p');
-        productCardText.classList.add('card-text');
-        productCardText.innerHTML = product.Description;
 
         let productCardPrice = document.createElement('p');
         productCardPrice.classList.add('card-text', 'card-price', 'text-muted');
@@ -98,9 +90,12 @@ xhr.onload = function() {
         productCardHeader.appendChild(productCardTitle);
         productCardHeader.appendChild(productCardPrice)
         productCardBody.appendChild(productCardHeader);
-        productCardBody.appendChild(productCardText);
+        productCardBody.appendChild(productCardCategories);
 
-        productCard.appendChild(productImage);
+        productImageContainer.appendChild(productImage);
+        productImageContainer.appendChild(productCardSizes);
+
+        productCard.appendChild(productImageContainer);
         productCard.appendChild(productCardBody);
         
         shop.appendChild(productCard);
@@ -133,6 +128,14 @@ xhr.onload = function() {
 
                 document.querySelector('#search-categories-dropdown').appendChild(dropdownItem);
             }
+        
+            if (categoryCells.includes(searchCategory) && searchCategory !== null) {
+                document.querySelector('.search-category-input#' + searchCategory).checked = true;
+                document.querySelector('#search-category-all').checked = false;
+                document.querySelector('#search-category-all').disabled = false;
+
+                filterByCategory(document.querySelectorAll('.product-card'), document.querySelector('.search-category-input#' + searchCategory));
+            }
 
             document.querySelectorAll('.product-card').forEach(card => {
                 if (card.getAttribute('data-search')) {
@@ -155,7 +158,7 @@ function filterByCategory(cards, newCategoryInput = null) {
 
     if (newCategoryInput !== null) {
         let category = newCategoryInput.getAttribute('id');
-
+        
         if (category === 'search-category-all') {
             document.querySelectorAll('.search-category-input:not(#search-category-all)').forEach(categoryInput => {
                 categoryInput.checked = false;
@@ -214,6 +217,15 @@ function filterByCategory(cards, newCategoryInput = null) {
     } else {
         document.querySelector('#search-category-all').checked = false;
         document.querySelector('#search-category-all').disabled = false;
+    }
+
+    let badgeCount = allCategories.includes('search-category-all') ? allCategories.length - 1 : allCategories.length;
+
+    if (badgeCount !== 0) {
+        document.querySelector('.search-category-badge').innerHTML = badgeCount;
+        document.querySelector('.search-category-badge').style.display = 'flex';
+    } else {
+        document.querySelector('.search-category-badge').style.display = 'none';
     }
 }
 

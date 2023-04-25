@@ -53,7 +53,7 @@
         
         <ul class="nav-list nav-mobile">
             <li class="nav-item">
-                <a href="#" class="nav-link">Home</a>
+                <a href="/index.html" class="nav-link">Home</a>
             </li>
             <li class="nav-item">
                 <a href="shop.html" class="nav-link nav-link-active">Shop</a>
@@ -117,11 +117,11 @@
     <div class="body-center">
         <h1 class="title text-center">Shop</h1>
 
-        <div class="flex m-inline-auto gap 1">
+        <div class="flex m-inline-auto gap 1 shop-filter">
             <input type="text" class="input search-input" placeholder="Search" />
 
             <div class="dropdown">
-                <a href="#" class="btn btn-primary btn-lg dropdown-btn" for="search-categories-dropdown"><i class="fa-solid fa-filter"></i></a>
+                <a href="#" class="btn btn-primary btn-lg dropdown-btn" for="search-categories-dropdown"><i class="fa-solid fa-filter"></i><span class="badge search-category-badge"></span></a>
 
                 <div class="dropdown-menu sort-dropdown pt-1 pb-1" id="search-categories-dropdown">
                     <div class="dropdown-item search-category input-line">
@@ -132,11 +132,11 @@
             </div>
         </div>
 
-        <div class="flex m-inline-auto search-categories">
+        <div class="flex m-inline-auto mb-1 search-categories">
 
         </div>
 
-        <div class="shop-container col-12 flex gap"></div>
+        <div class="shop-container col-12 flex gap-sm"></div>
 
         <div class="shop-search-no-results text-center">
             <i class="fa-solid fa-magnifying-glass"></i>
