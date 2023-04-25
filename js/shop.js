@@ -78,3 +78,29 @@ document.querySelectorAll('.product-card').forEach(productCard => {
         window.location.href = `/product.html?id=${productID}`;
     });
 });
+
+document.querySelector('.search-input').addEventListener('keyup', function() {
+    const searchInput = document.querySelector('.search-input').value.toLowerCase();
+    const products = document.querySelectorAll('.product-card');
+
+    for (let product of products) {
+        const productName = product.querySelector('.card-title').innerHTML.toLowerCase();
+        let productDescription = product.querySelector('.card-text').innerHTML.toLowerCase();
+        let productPrice = product.querySelector('.card-price').innerHTML.toLowerCase();
+        let searchResult = productName + productDescription + productPrice;
+        let found = [];
+
+        if (productName.includes(searchInput)) {
+            product.style.display = 'block';
+            found.push(productName);
+        } else {
+            product.style.display = 'none';
+        }
+
+        if (found.length > 0) {
+            document.querySelector('.shop-search-no-results').style.display = 'none';
+        } else {
+            document.querySelector('.shop-search-no-results').style.display = 'block';
+        }
+    }
+});

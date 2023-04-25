@@ -39,7 +39,7 @@ function showOrders(account, orderID = null) {
                 xhr.onload = function() {
                     if (xhr.status === 200) {
                         const product = JSON.parse(xhr.responseText);
-                        orderItemImage.src = '/img/' + product.Image;
+                        orderItemImage.src = product.Images[0];
 
                         let orderItemContent = document.createElement('div');
                         orderItemContent.classList.add('order-item-content', 'col-9');
