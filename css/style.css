@@ -160,11 +160,13 @@
 
 .search-category-badge {
     display: none;
+    width: 1rem;
+    height: 1rem;
 }
 
 .card {
     appearance: none;
-    min-width: 18rem;
+    width: 18rem;
     color: var(--primary-text-color);
     border-radius: 0.5rem;
     transition: all 0.2s ease-in-out;
@@ -198,6 +200,10 @@
     background-color: rgba(var(--primary-bg-color-decimal), 0.5);
     transform: translateY(100%);
     transition: all 0.2s ease-in-out;
+}
+
+.card-sizes h4 {
+    font-weight: 500;
 }
 
 .card-categories {
@@ -838,4 +844,24 @@ body:has(.offcanvas.open) {
     .order-item-image {
         display: none;
     }
+}
+
+/* Error */
+
+.error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 90vh;
+}
+
+.error h1 {
+    font-size: 3rem;
+    color: var(--error-color);
+}
+
+.error h2 {
+    font-size: 1.5rem;
+    color: var(--secondary-text-color);
 }

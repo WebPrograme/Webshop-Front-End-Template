@@ -12,7 +12,7 @@ function showOrders(account, orderID = null) {
     xhr.send(JSON.stringify(requestData));
 
     xhr.onload = function() {
-        if (xhr.status === 200) {
+        if (xhr.status >= 200 && xhr.status < 300) {
             let orders = JSON.parse(xhr.responseText);
             let ordersList = document.querySelector('.order-list');
 
@@ -37,7 +37,7 @@ function showOrders(account, orderID = null) {
                 xhr.send();
 
                 xhr.onload = function() {
-                    if (xhr.status === 200) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
                         const product = JSON.parse(xhr.responseText);
                         orderItemImage.src = product.Images[0];
 
@@ -102,7 +102,7 @@ function showOrders(account, orderID = null) {
                                 xhr.send();
             
                                 xhr.onload = function() {
-                                    if (xhr.status === 200) {
+                                    if (xhr.status >= 200 && xhr.status < 300) {
                                         for (let size in orderProduct.Sizes) {
                                             const product = JSON.parse(xhr.responseText);
 
@@ -222,7 +222,7 @@ if (storedAccount && loggedIn) {
         xhr.send(JSON.stringify(requestData));
 
         xhr.onload = function() {
-            if (xhr.status === 200) {
+            if (xhr.status >= 200 && xhr.status < 300) {
                 let account = JSON.parse(xhr.responseText);
                 localStorage.setItem('account', JSON.stringify(account));
                 localStorage.setItem('loggedIn', 'true');

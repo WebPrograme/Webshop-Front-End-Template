@@ -23,7 +23,7 @@ xhr.open('GET', `http://localhost:8081/api/products/${productID}`);
 xhr.send();
 
 xhr.onload = function() {
-    if (xhr.status === 200) {
+    if (xhr.status >= 200 && xhr.status < 300) {
         let product = JSON.parse(xhr.response);
 
         let productTitle = document.querySelector('.product-title');
@@ -145,7 +145,7 @@ xhr.onload = function() {
                 xhr.send(JSON.stringify(requestData));
 
                 xhr.onload = function() {
-                    if (xhr.status === 200) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
                         document.querySelector('.cart-count').innerHTML = cart.length;
 
                         const toast = new Toast('added-to-cart-success');
@@ -189,7 +189,7 @@ xhr.onload = function() {
                 xhr.send(JSON.stringify(requestData));
 
                 xhr.onload = function() {
-                    if (xhr.status === 200) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
                         initializeFavorites(JSON.parse(localStorage.getItem('account')));
                     }
                 }

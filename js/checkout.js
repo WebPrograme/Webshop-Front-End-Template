@@ -14,7 +14,7 @@ function showOrder(account) {
         xhr.send();
 
         xhr.onload = function() {
-            if (xhr.status === 200) {
+            if (xhr.status >= 200 && xhr.status < 300) {
                 let product = JSON.parse(xhr.response);
 
                 Object.keys(productCart.Sizes).forEach(function(size, index) {
@@ -127,7 +127,7 @@ function showOrder(account) {
                                     xhr.send();
 
                                     xhr.onload = function() {
-                                        if (xhr.status === 200) {
+                                        if (xhr.status >= 200 && xhr.status < 300) {
                                             let product = JSON.parse(xhr.response);
 
                                             Object.keys(productCart.Sizes).forEach(function(size, index) {
@@ -170,7 +170,7 @@ function showOrder(account) {
                                         }));
 
                                         xhr.onload = function() {
-                                            if (xhr.status === 200) {
+                                            if (xhr.status >= 200 && xhr.status < 300) {
                                                 delete account.Cart;
 
                                                 localStorage.setItem('account', JSON.stringify(account));
@@ -222,7 +222,7 @@ if (storedAccount && loggedIn) {
         xhr.send(JSON.stringify(requestData));
 
         xhr.onload = function() {
-            if (xhr.status === 200) {
+            if (xhr.status >= 200 && xhr.status < 300) {
                 let account = JSON.parse(xhr.responseText);
                 localStorage.setItem('account', JSON.stringify(account));
                 localStorage.setItem('loggedIn', 'true');

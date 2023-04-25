@@ -53,7 +53,7 @@ function initializeCart(account) {
             xhr.send();
 
             xhr.onload = function() {
-                if (xhr.status === 200) {
+                if (xhr.status >= 200 && xhr.status < 300) {
                     const product = JSON.parse(xhr.response);
 
                     Object.keys(productCart.Sizes).forEach((size) => {
@@ -200,7 +200,7 @@ function initializeCart(account) {
                             }));
         
                             xhr.onload = function() {
-                                if (xhr.status === 200) {
+                                if (xhr.status >= 200 && xhr.status < 300) {
                                     updateCart(cart, productID, productSize, productPrice);
                                 }
                             };
@@ -239,7 +239,7 @@ function initializeCart(account) {
                             }));
         
                             xhr.onload = function() {
-                                if (xhr.status === 200) {
+                                if (xhr.status >= 200 && xhr.status < 300) {
                                     localStorage.setItem('account', JSON.stringify(account));
                                     updateCart(cart, productID, productSize);
                                 }
@@ -277,7 +277,7 @@ function initializeFavorites(account) {
             xhr.send();
 
             xhr.onload = function() {
-                if (xhr.status === 200) {
+                if (xhr.status >= 200 && xhr.status < 300) {
                     const product = JSON.parse(xhr.response);
 
                     let favoritesItem = document.createElement('div');
@@ -356,7 +356,7 @@ function initializeFavorites(account) {
                             }));
         
                             xhr.onload = function() {
-                                if (xhr.status === 200) {
+                                if (xhr.status >= 200 && xhr.status < 300) {
                                     localStorage.setItem('account', JSON.stringify(account));
                                     updateFavorites(favorites, productID, productPrice);
                                 }
@@ -390,7 +390,7 @@ function login(account, rememberMe = false) {
     xhr.send(JSON.stringify(account));
     
     xhr.onload = function() {
-        if (xhr.status === 200) {
+        if (xhr.status >= 200 && xhr.status < 300) {
             const response = JSON.parse(xhr.response);
             response.Remember = rememberMe;
 
@@ -423,7 +423,7 @@ function register(account) {
     xhr.send(JSON.stringify(account));
     
     xhr.onload = function() {
-        if (xhr.status === 200) {
+        if (xhr.status >= 200 && xhr.status < 300) {
             window.location.href = '/index.html';
         } else if (xhr.status === 500 && xhr.response === 'Account already exists') {
             new Toast('email-exists').show();

@@ -67,7 +67,7 @@ xhr.onload = function() {
 
         let productCardSizes = document.createElement('div');
         productCardSizes.classList.add('card-sizes');
-        productCardSizes.innerHTML = '<h4>' + Object.keys(product.Sizes).join(' | ') + '</h4>';
+        productCardSizes.innerHTML = '<h4>' + sortSizes(Object.keys(product.Sizes)).join(' | ') + '</h4>';
 
         let productCardBody = document.createElement('div');
         productCardBody.classList.add('card-body');
@@ -222,11 +222,28 @@ function filterByCategory(cards, newCategoryInput = null) {
     let badgeCount = allCategories.includes('search-category-all') ? allCategories.length - 1 : allCategories.length;
 
     if (badgeCount !== 0) {
-        document.querySelector('.search-category-badge').innerHTML = badgeCount;
         document.querySelector('.search-category-badge').style.display = 'flex';
     } else {
         document.querySelector('.search-category-badge').style.display = 'none';
     }
+}
+
+function sortSizes(sizes) {
+    let sizesValues = {
+        "XS": "1",
+        "S": "2",
+        "M": "3",
+        "L": "4",
+        "XL": "5",
+        "XXL": "6"
+    }
+    let sortedSizes = [];
+    let sizesConverted = sizes.map(size => sizesValues[size]);
+
+    sizesConverted.sort((a, b) => a - b);
+    sortedSizes = sizesConverted.map(size => Object.keys(sizesValues).find(key => sizesValues[key] === size));
+
+    return sortedSizes;
 }
 
 document.querySelectorAll('.product-card').forEach(productCard => {
