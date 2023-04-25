@@ -72,6 +72,21 @@ xhr.onload = function() {
             }
         }
 
+        for (let category of Object.keys(product.Categories)) {
+            let productCategory = document.createElement('a');
+            productCategory.classList.add('product-category');
+            productCategory.style.backgroundColor = '#' + product.Categories[category];
+            productCategory.setAttribute('data-color-id', product.Categories[category]);
+            productCategory.setAttribute('href', '/pages/shop.html?category=' + category);
+    
+            let productCategoryLabel = document.createElement('span');
+            productCategoryLabel.innerHTML = category;
+    
+            productCategory.appendChild(productCategoryLabel);
+    
+            document.querySelector('.product-categories-list').appendChild(productCategory);
+        }
+
         let productAddToCart = document.querySelector('.product-add-to-cart');
         let productAddToFavorites = document.querySelector('.product-add-to-favorites');
         let productImageCarouselItemImages = document.querySelectorAll('.product-image-carousel-item-image');

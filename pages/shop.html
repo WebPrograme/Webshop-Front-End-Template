@@ -117,7 +117,24 @@
     <div class="body-center">
         <h1 class="title text-center">Shop</h1>
 
-        <input type="text" class="input search-input flex m-inline-auto" placeholder="Search" />
+        <div class="flex m-inline-auto gap 1">
+            <input type="text" class="input search-input" placeholder="Search" />
+
+            <div class="dropdown">
+                <a href="#" class="btn btn-primary btn-lg dropdown-btn" for="search-categories-dropdown"><i class="fa-solid fa-filter"></i></a>
+
+                <div class="dropdown-menu sort-dropdown pt-1 pb-1" id="search-categories-dropdown">
+                    <div class="dropdown-item search-category input-line">
+                        <input type="checkbox" id="search-category-all" class="search-category-input input" checked disabled />
+                        <label for="search-category-all" class="search-category-label">All</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex m-inline-auto search-categories">
+
+        </div>
 
         <div class="shop-container col-12 flex gap"></div>
 

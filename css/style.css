@@ -69,6 +69,10 @@
     background-color: var(--secondary-btn-bg);
 }
 
+.sort-dropdown .dropdown-item.input-line {
+    margin-block: 0;
+}
+
 .account-user {
     display: none;
 }
@@ -185,6 +189,31 @@
 
 .product-price {
     color: var(--secondary-color);
+}
+
+.product-categories {
+    margin-bottom: 1rem;
+}
+
+.product-categories-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.product-category {
+    display: flex;
+    align-items: center;
+    width: min-content;
+    padding: .3rem .7rem;
+    border-radius: 1rem;
+    color: var(--primary-bg-color);
+}
+
+.product-category-delete {
+    margin-left: .5rem;
+    cursor: pointer;
 }
 
 .product-sizes-select {
