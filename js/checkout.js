@@ -23,7 +23,7 @@ function showOrder(account) {
 
                     let productItemImg = document.createElement('img');
                     productItemImg.classList.add('order-item-img', 'col-3');
-                    productItemImg.src = `/img/${product.Image}`;
+                    productItemImg.src = product.Images[0];
                     productItemImg.alt = product.Name;
                     
                     let productItemInfo = document.createElement('div');

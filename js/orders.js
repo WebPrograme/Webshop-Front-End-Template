@@ -32,13 +32,14 @@ function showOrders(account, orderID = null) {
 
                 let orderProductID = order.Products[0]['ID'];
 
-                const xhr = new XMLHttpRequest();
-                xhr.open('GET', `http://localhost:8081/api/products/${orderProductID}`);
-                xhr.send();
+                const xhr2 = new XMLHttpRequest();
+                xhr2.open('GET', `http://localhost:8081/api/products/${orderProductID}`);
+                xhr2.send();
 
-                xhr.onload = function() {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        const product = JSON.parse(xhr.responseText);
+                xhr2.onload = function() {
+                    if (xhr2.status >= 200 && xhr2.status < 300) {
+                        const product = JSON.parse(xhr2.responseText);
+                        
                         orderItemImage.src = product.Images[0];
 
                         let orderItemContent = document.createElement('div');
@@ -105,7 +106,7 @@ function showOrders(account, orderID = null) {
                                     if (xhr.status >= 200 && xhr.status < 300) {
                                         for (let size in orderProduct.Sizes) {
                                             const product = JSON.parse(xhr.responseText);
-
+                                            
                                             let orderItemProduct = document.createElement('a');
                                             orderItemProduct.classList.add('order-item-product');
                                             orderItemProduct.setAttribute('href', '/pages/product.html?id=' + orderProduct.ID);

@@ -88,7 +88,7 @@ function initializeCart(account) {
     
                         let cartImage = document.createElement('img');
                         cartImage.classList.add('cart-image', 'col-4');
-                        cartImage.src = `/img/${product.Image}`;
+                        cartImage.src = product.Images[0];
                         cartImage.alt = product.Name;
     
                         let cartContent = document.createElement('div');
