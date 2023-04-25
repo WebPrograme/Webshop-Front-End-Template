@@ -34,7 +34,7 @@ xhr.onload = function() {
 
         const productImage = document.createElement('img');
         productImage.classList.add('card-image');
-        productImage.src = "/img/" + product.Image;
+        productImage.src = product.Images[0];
         productImage.alt = product.Name;
 
         const productCardBody = document.createElement('div');

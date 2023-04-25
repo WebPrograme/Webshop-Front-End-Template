@@ -36,7 +36,7 @@ xhr.onload = function() {
         productDescription.innerHTML += product.Description;
         
         let productImage = document.querySelector('.product-image-main');
-        productImage.src = `/img/${product.Image}`;
+        productImage.src = product.Images[0];
         productImage.alt = product.Name;
 
         let productImageCarousel = document.querySelector('.product-image-carousel');
@@ -44,28 +44,21 @@ xhr.onload = function() {
         let productImageCarouselItem = document.createElement('div');
         productImageCarouselItem.classList.add('product-image-carousel-item');
 
-        let productImageCarouselItemImage = document.createElement('img');
-        productImageCarouselItemImage.classList.add('product-image-carousel-item-image', 'product-image-carousel-item-image-active');
-        productImageCarouselItemImage.src = `/img/${product.Image}`;
-        productImageCarouselItemImage.alt = product.Name;
-        productImageCarouselItemImage.setAttribute('data-product-id', productID);
-    
-        productImageCarouselItem.appendChild(productImageCarouselItemImage);
-        productImageCarousel.appendChild(productImageCarouselItem);
-
         for (let image of product.Images) {
             let productImageCarouselItem = document.createElement('div');
             productImageCarouselItem.classList.add('product-image-carousel-item');
 
             let productImageCarouselItemImage = document.createElement('img');
             productImageCarouselItemImage.classList.add('product-image-carousel-item-image');
-            productImageCarouselItemImage.src = `/img/${image}`;
+            productImageCarouselItemImage.src = image;
             productImageCarouselItemImage.alt = product.Name;
             productImageCarouselItemImage.setAttribute('data-product-id', productID);
         
             productImageCarouselItem.appendChild(productImageCarouselItemImage);
             productImageCarousel.appendChild(productImageCarouselItem);
         }
+
+        document.querySelector('.product-image-carousel-item-image').classList.add('product-image-carousel-item-image-active');
 
         let productSizesSelect = document.querySelector('.product-sizes-select');
         let sortedSizes = sortSizes(Object.keys(product.Sizes));

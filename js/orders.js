@@ -112,7 +112,7 @@ function showOrders(account, orderID = null) {
                 
                                             let orderItemProductImage = document.createElement('img');
                                             orderItemProductImage.classList.add('order-item-product-image');
-                                            orderItemProductImage.src = '/img/' + product.Images[0];
+                                            orderItemProductImage.src = product.Images[0];
 
                                             let orderItemProductQuantity = document.createElement('h3');
                                             orderItemProductQuantity.classList.add('order-item-product-quantity');
