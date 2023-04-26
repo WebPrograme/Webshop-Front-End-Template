@@ -45,14 +45,18 @@
 
 /* Login Navbar */
 
-#account-dropdown, .sort-dropdown {
+.nav-hamburger {
+    padding-top: .2rem;
+}
+
+.account-dropdown, .sort-dropdown {
     background-color: var(--primary-bg-color);
     border-radius: 0.5rem;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     padding-inline: 0.5rem;
 }
 
-#account-dropdown .dropdown-item, .sort-dropdown .dropdown-item {
+.account-dropdown .dropdown-item, .sort-dropdown .dropdown-item {
     display: flex;
     align-items: center;
     color: var(--primary-text-color);
@@ -61,11 +65,11 @@
     transition: all 0.2s ease-in-out;
 }
 
-#account-dropdown .dropdown-item i, .sort-dropdown .dropdown-item i {
+.account-dropdown .dropdown-item i, .sort-dropdown .dropdown-item i {
     margin-right: 0.7rem;
 }
 
-#account-dropdown .dropdown-item:hover, .sort-dropdown .dropdown-item:hover {
+.account-dropdown .dropdown-item:hover, .sort-dropdown .dropdown-item:hover {
     background-color: var(--secondary-btn-bg);
 }
 
@@ -501,6 +505,7 @@ body:has(.offcanvas.open) {
 }
 
 .cart-image, .favorites-image {
+    width: 9rem;
     padding: 0;
     margin: 0;
     border-radius: .2rem;
@@ -848,7 +853,7 @@ body:has(.offcanvas.open) {
 
 /* Error */
 
-.error {
+.error-page {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -856,12 +861,12 @@ body:has(.offcanvas.open) {
     height: 90vh;
 }
 
-.error h1 {
+.error-page h1 {
     font-size: 3rem;
     color: var(--error-color);
 }
 
-.error h2 {
+.error-page h2 {
     font-size: 1.5rem;
     color: var(--secondary-text-color);
 }
