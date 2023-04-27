@@ -3112,7 +3112,7 @@ img {
 
 .toast {
     width: fit-content;
-    display: flex;
+    display: none;
     align-items: center;
     font-weight: 500;
     padding: 1rem;
@@ -3120,6 +3120,10 @@ img {
     opacity: 0;
     z-index: 999;
     transition: all 0.2s ease-in-out;
+}
+
+.toast.show {
+    display: flex;
 }
 
 .toast.bottom.show {
