@@ -1,3 +1,5 @@
+import { initializeCart, initializeFavorites } from "./account.js";
+
 const productID = window.location.search.split('?id=')[1];
 
 function sortSizes(sizes) {
@@ -90,7 +92,7 @@ xhr.onload = function() {
         let productAddToCart = document.querySelector('.product-add-to-cart');
         let productAddToFavorites = document.querySelector('.product-add-to-favorites');
         let productImageCarouselItemImages = document.querySelectorAll('.product-image-carousel-item-image');
-        let loggedIn = localStorage.getItem('loggedIn') === 'true';
+        let loggedIn = document.cookie.split('accountID=')[1] !== undefined;
 
         if (loggedIn) {
             productAddToCart.innerHTML = 'Add to Cart';
@@ -103,55 +105,65 @@ xhr.onload = function() {
 
         productAddToCart.addEventListener('click', function() {
             if (loggedIn && productSizesSelect.value !== "Select a Size") {
-                let cart = JSON.parse(localStorage.getItem('account')).Cart || [];
-                let productSize = productSizesSelect.value;
-                let productID = productAddToCart.getAttribute('data-product-id');
-                let productInCart = cart.filter(product => product.ID === productID)[0];
+                const xhrAccount = new XMLHttpRequest();
+                xhrAccount.open('POST', 'http://localhost:8081/api/accounts/login');
+                xhrAccount.setRequestHeader('Content-Type', 'application/json');
+                
+                xhrAccount.send(JSON.stringify({UID: document.cookie.split('accountID=')[1]}));
+        
+                xhrAccount.onload = function() {
+                    if (xhrAccount.status >= 200 && xhrAccount.status < 300) {
+                        let account = JSON.parse(xhrAccount.response);
+                        let cart = account.Cart ? account.Cart : [];
 
-                if (productInCart) {
-                    if (productInCart["Sizes"][productSize]) {
-                        cart[cart.indexOf(productInCart)]["Sizes"][productSize]["Quantity"] += 1;
-                    } else {
-                        cart[cart.indexOf(productInCart)]["Sizes"][productSize] = {
-                            "Quantity": 1
-                        };
-                    }
-                } else {
-                    cart.push({
-                        "ID": productID,
-                        "Name": product.Name,
-                        "Sizes": {
-                            [productSize]: {
-                                "Quantity": 1
+                        let productSize = productSizesSelect.value;
+                        let productID = productAddToCart.getAttribute('data-product-id');
+                        let productInCart = cart.filter(product => product.ID === productID)[0];
+
+                        if (productInCart) {
+                            if (productInCart["Sizes"][productSize]) {
+                                cart[cart.indexOf(productInCart)]["Sizes"][productSize]["Quantity"] += 1;
+                            } else {
+                                cart[cart.indexOf(productInCart)]["Sizes"][productSize] = {
+                                    "Quantity": 1
+                                };
+                            }
+                        } else {
+                            cart.push({
+                                "ID": productID,
+                                "Name": product.Name,
+                                "Sizes": {
+                                    [productSize]: {
+                                        "Quantity": 1
+                                    }
+                                }
+                            });
+                        }
+
+                        account.Cart = cart;
+                        console.log(account);
+                        
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', `http://localhost:8081/api/cart/update`);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+
+                        let requestData = {
+                            "Account": account,
+                            "Cart": cart
+                        }
+
+                        xhr.send(JSON.stringify(requestData));
+
+                        xhr.onload = function() {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                document.querySelector('.cart-count').innerHTML = cart.length;
+
+                                const toast = new Toast('added-to-cart-success');
+                                toast.show();
+
+                                initializeCart(account);
                             }
                         }
-                    });
-                }
-
-                let account = JSON.parse(localStorage.getItem('account'));
-                account.Cart = cart;
-
-                localStorage.setItem('account', JSON.stringify(account));
-                
-                const xhr = new XMLHttpRequest();
-                xhr.open('PUT', `http://localhost:8081/api/cart/update`);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-
-                let requestData = {
-                    "Account": account,
-                    "Cart": cart
-                }
-
-                xhr.send(JSON.stringify(requestData));
-
-                xhr.onload = function() {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        document.querySelector('.cart-count').innerHTML = cart.length;
-
-                        const toast = new Toast('added-to-cart-success');
-                        toast.show();
-
-                        initializeCart(JSON.parse(localStorage.getItem('account')));
                     }
                 }
             }

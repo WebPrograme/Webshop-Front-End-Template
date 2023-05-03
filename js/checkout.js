@@ -1,7 +1,7 @@
-const loggedIn = localStorage.getItem('loggedIn') === 'true';
+import { getAccount } from './account.js';
 
 function showOrder(account) {
-    const cart = storedAccount.Cart;
+    const cart = account.Cart;
     const order = document.querySelector('.order');
     const orderList = document.querySelector('.order-list');
     const orderTotalPrice = document.querySelector('.order-footer-total-price');
@@ -194,46 +194,30 @@ function showOrder(account) {
     }
 }
 
-if (storedAccount && loggedIn) {
-    let relogin = document.querySelector('.relogin-form');
-    let checkout = document.querySelector('.checkout-steps');
-    let checkoutStepIndex = window.location.search.split('step=')[1];
-    let checkoutSteps = document.querySelectorAll('.checkout-step');
-    let checkoutStepActive = document.querySelector('.checkout-step-active');
-    
-    checkoutStepActive.classList.remove('checkout-step-active');
-    document.querySelector('[step="' + checkoutStepIndex + '"]').classList.add('checkout-step-active');
+let relogin = document.querySelector('.relogin-form');
+let checkout = document.querySelector('.checkout-steps');
+let checkoutStepIndex = window.location.search.split('step=')[1];
+let checkoutSteps = document.querySelectorAll('.checkout-step');
+let checkoutStepActive = document.querySelector('.checkout-step-active');
 
-    document.querySelector('.relogin-btn').addEventListener('click', function(e) {
-        e.preventDefault();
+checkoutStepActive.classList.remove('checkout-step-active');
+document.querySelector('[step="' + checkoutStepIndex + '"]').classList.add('checkout-step-active');
 
-        let email = document.querySelector('[name="Email"]').value;
-        let password = document.querySelector('[name="Password"]').value;
+document.querySelector('.relogin-btn').addEventListener('click', function(e) {
+    e.preventDefault();
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'http://localhost:8081/api/accounts/login');
-        xhr.setRequestHeader('Content-Type', 'application/json');
+    let email = document.querySelector('[name="Email"]').value;
+    let password = document.querySelector('[name="Password"]').value;
 
-        let requestData = {
-            "Email": email,
-            "Password": password
+    getAccount(email, password).then(function(account) {
+        if (account) {
+            relogin.style.display = 'none';
+            checkout.style.display = 'flex';
+            showOrder(account);
+        } else {
+            alert('Invalid email or password');
         }
-
-        xhr.send(JSON.stringify(requestData));
-
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                let account = JSON.parse(xhr.responseText);
-                localStorage.setItem('account', JSON.stringify(account));
-                localStorage.setItem('loggedIn', 'true');
-
-                relogin.style.display = 'none';
-                checkout.style.display = 'flex';
-
-                showOrder(storedAccount);
-            } else {
-                alert('Invalid email or password');
-            }
-        }
+    }).catch(function(error) {
+        console.log(error);
     });
-}
+});

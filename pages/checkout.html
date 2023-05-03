@@ -68,6 +68,45 @@
         </ul>
     </nav>
 
+    <div class="offcanvas m right" id="offcanvas-cart" overlay close-trough>
+        <div class="offcanvas-header">
+            <h1 class="offcanvas-title line-after">Cart</h1>
+            <i class="fas fa-times offcanvas-close"></i>
+        </div>
+        <div class="offcanvas-body cart-body">
+            <div class="cart-empty">
+                <h3 class="cart-empty-title">Your cart is empty</h3>
+            </div>
+
+            <div class="cart-items">
+            </div>
+
+            <div class="cart-footer">
+                <div class="flex justify-between">
+                    <h2>Total</h2>
+                    <h2 class="cart-total-price"></h2>
+                </div>
+
+                <a href="#" class="btn btn-primary btn-lg cart-checkout">Checkout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="offcanvas m right" id="offcanvas-favorites" overlay close-trough>
+        <div class="offcanvas-header">
+            <h1 class="offcanvas-title line-after">Favorites</h1>
+            <i class="fas fa-times offcanvas-close"></i>
+        </div>
+        <div class="offcanvas-body favorites-body">
+            <div class="favorites-empty">
+                <h3 class="favorites-empty-title">You don't have favorites</h3>
+            </div>
+
+            <div class="favorites-items">
+            </div>
+        </div>
+    </div>
+
     
     <div class="body-center">
         <h1 class="text-center">Checkout</h1>
@@ -195,7 +234,7 @@
     <script src="https://kit.fontawesome.com/62dc937956.js" crossorigin="anonymous"></script>
     <script src="/plugins/Yarn/yarn.js"></script>
     <script src="/js/ping.js"></script>
-    <script src="/js/account.js"></script>
-    <script src="/js/checkout.js"></script>
+    <script src="/js/account.js" type="module"></script>
+    <script src="/js/checkout.js" type="module"></script>
 </body>
 </html>

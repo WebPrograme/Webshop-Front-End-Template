@@ -1,4 +1,4 @@
-const loggedIn = localStorage.getItem('loggedIn') === 'true';
+import { getAccount } from './account.js';
 
 function showOrders(account, orderID = null) {
     const xhr = new XMLHttpRequest();
@@ -6,7 +6,7 @@ function showOrders(account, orderID = null) {
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     let requestData = {
-        "Account": account
+        "Token": account
     }
 
     xhr.send(JSON.stringify(requestData));
@@ -185,56 +185,42 @@ function showOrders(account, orderID = null) {
                     }
                 }
             });
+        } else {
+            let ordersList = document.querySelector('.order-list');
+
+            let noOrders = document.createElement('h2');
+            noOrders.classList.add('no-orders', 'text-center');
+            noOrders.innerHTML = 'No orders found';
+
+            ordersList.appendChild(noOrders);
         }
     }
 }
 
-if (storedAccount && loggedIn) {
-    let relogin = document.querySelector('.relogin-form');
-    let orders = document.querySelector('.order-items');
+let relogin = document.querySelector('.relogin-form');
+let orders = document.querySelector('.order-items');
+let orderID = window.location.search.split('orderID=')[1];
 
-    let orderID = window.location.search.split('orderID=')[1];
+if (orderID) {
+    relogin.style.display = 'none';
+    orders.style.display = 'block';
+    showOrders(orderID);
+} else {
+    relogin.style.display = 'block';
+    orders.style.display = 'none';
+}
 
-    if (orderID) {
+document.querySelector('.relogin-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    let email = document.querySelector('[name="Email"]').value;
+    let password = document.querySelector('[name="Password"]').value;
+
+    getAccount(email, password).then((account) => {
         relogin.style.display = 'none';
         orders.style.display = 'block';
-
-        showOrders(storedAccount, orderID);
-    } else {
-        relogin.style.display = 'block';
-        orders.style.display = 'none';
-    }
-
-    document.querySelector('.relogin-btn').addEventListener('click', function(e) {
-        e.preventDefault();
-
-        let email = document.querySelector('[name="Email"]').value;
-        let password = document.querySelector('[name="Password"]').value;
-
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'http://localhost:8081/api/accounts/login');
-        xhr.setRequestHeader('Content-Type', 'application/json');
-
-        let requestData = {
-            "Email": email,
-            "Password": password
-        }
-
-        xhr.send(JSON.stringify(requestData));
-
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                let account = JSON.parse(xhr.responseText);
-                localStorage.setItem('account', JSON.stringify(account));
-                localStorage.setItem('loggedIn', 'true');
-
-                relogin.style.display = 'none';
-                orders.style.display = 'block';
-
-                showOrders(account);
-            } else {
-                alert('Invalid email or password');
-            }
-        }
+        showOrders(account);
+    }).catch((error) => {
+        console.log(error);
     });
-}
+});

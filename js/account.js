@@ -1,11 +1,27 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyB5Z8TLxmkqZDVcDh5lyGlsqKHRGVYefIg",
+    authDomain: "web-shop-38204.firebaseapp.com",
+    projectId: "web-shop-38204",
+    storageBucket: "web-shop-38204.appspot.com",
+    messagingSenderId: "258327241295",
+    appId: "1:258327241295:web:a2578cd574ad30f1c0c03a",
+    measurementId: "G-W73DFZVRY4"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
 const navAccount = document.querySelectorAll('.account-user');
 const navLogin = document.querySelectorAll('.account-login');
 const logoutBtn = document.querySelectorAll('.account-logout');
 const ordersBtn = document.querySelectorAll('.account-orders');
 const loginBtn = document.querySelector('.login-btn');
 const registerBtn = document.querySelector('.register-btn');
-const storedAccount = localStorage.getItem('account') ? JSON.parse(localStorage.getItem('account')) : null;
-
+const storedAccount = localStorage.getItem('accountID');
 
 function initializeCart(account) {
     const cart = account.Cart;
@@ -287,7 +303,7 @@ function initializeFavorites(account) {
 
                     let favoritesImage = document.createElement('img');
                     favoritesImage.classList.add('favorites-image', 'col-4');
-                    favoritesImage.src = `/img/${product.Image}`;
+                    favoritesImage.src = product.Images[0];
                     favoritesImage.alt = product.Name;
 
                     let favoritesContent = document.createElement('div');
@@ -381,72 +397,98 @@ function initializeFavorites(account) {
     }
 }
 
+function getAccount(email, password) {
+    return new Promise((resolve, reject) => {
+        signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const accountID = userCredential['user']['uid'];
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost:8081/api/accounts/login');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.send(JSON.stringify({UID: accountID}));
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(accountID);
+                } else {
+                    reject(xhr.response);
+                }
+            }
+        });
+    });
+}
+
 function login(account, rememberMe = false) {
-    let xhr = new XMLHttpRequest();
-
-    xhr.open('POST', 'http://localhost:8081/api/accounts/login');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-
-    xhr.send(JSON.stringify(account));
-    
-    xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            const response = JSON.parse(xhr.response);
-            response.Remember = rememberMe;
-
-            localStorage.setItem('account', JSON.stringify(response));
-            localStorage.setItem('loggedIn', true)
-
-            navAccount.forEach((element) => {
-                element.style.display = 'block';
-            });
-            navLogin.forEach((element) => {
-                element.style.display = 'none';
-            });
-
-            document.querySelector('.account-user .nav-link').innerHTML += response.Forname;
-
-            initializeCart(response);
-            initializeFavorites(response);
+    getAccount(account['Email'], account['Password']).then((accountID) => {
+        if (rememberMe) {
+            localStorage.setItem('accountID', accountID);
         } else {
-            new Toast('login-failed').show();
+            localStorage.removeItem('accountID');
         }
-    };
-}
-
-function register(account) {
-    let xhr = new XMLHttpRequest();
-
-    xhr.open('POST', 'http://localhost:8081/api/accounts/register');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-
-    xhr.send(JSON.stringify(account));
-    
-    xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            window.location.href = '/index.html';
-        } else if (xhr.status === 500 && xhr.response === 'Account already exists') {
-            new Toast('email-exists').show();
-        }
-    };
-}
-
-if (storedAccount) {
-    const account = JSON.parse(localStorage.getItem('account'));
-
-    if (account.Remember) {
-        login({
-            "Email": account.Email,
-            "Password": account.Password
-        }, true);
-
+        
         navAccount.forEach((element) => {
             element.style.display = 'block';
         });
         navLogin.forEach((element) => {
             element.style.display = 'none';
         });
-    }
+
+        window.location.href = '/index.html';
+    }).catch((error) => {
+        new Toast('login-failed').show();
+    });
+}
+
+function register(account) {
+    createUserWithEmailAndPassword(auth, account['Email'], account['Password'])
+    .then((userCredential) => {
+        const accountID = userCredential['user']['uid'];
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://localhost:8081/api/accounts/register');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        
+        xhr.send(JSON.stringify({UID: accountID, Account: account}));
+
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                window.location.href = '/index.html';
+            }
+        };
+    })
+    .catch((error) => {
+        if (error.code === 'auth/email-already-in-use') {
+            new Toast('email-exists').show();
+        }
+    });
+}
+
+if (storedAccount) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'http://localhost:8081/api/accounts/login');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    
+    xhr.send(JSON.stringify({UID: storedAccount}));
+
+    xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            const account = JSON.parse(xhr.response);
+            
+            navAccount.forEach((element) => {
+                element.style.display = 'block';
+            });
+            navLogin.forEach((element) => {
+                element.style.display = 'none';
+            });
+            
+            document.querySelector('.account-user .nav-link').innerHTML += account['Forname'];
+
+            initializeCart(account);
+            initializeFavorites(account);
+        } else {
+            new Toast('email-exists').show();
+        }
+    };
 } else {
     navAccount.forEach((element) => {
         element.style.display = 'none';
@@ -549,13 +591,17 @@ if (registerBtn) {
 logoutBtn.forEach((element) => {
     element.addEventListener('click', (e) => {
         e.preventDefault();
-        localStorage.removeItem('account');
-        localStorage.removeItem('loggedIn');
-        navAccount.forEach((element) => {
-            element.style.display = 'none';
-        });
-        navLogin.forEach((element) => {
-            element.style.display = 'block';
-        });
+
+        signOut(auth).then(() => {
+            localStorage.removeItem('accountID');
+            navAccount.forEach((element) => {
+                element.style.display = 'none';
+            });
+            navLogin.forEach((element) => {
+                element.style.display = 'block';
+            });
+        })
     });
 });
+
+export { initializeCart, initializeFavorites, getAccount }
