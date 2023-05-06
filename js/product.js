@@ -175,39 +175,51 @@ xhr.onload = function() {
         });
 
         productAddToFavorites.addEventListener('click', function() {
-            if (loggedIn) {
-                let favorites = JSON.parse(localStorage.getItem('account')).Favorites || [];
-                let productID = productAddToCart.getAttribute('data-product-id');
-                let productInFavorites = favorites.filter(product => product.ID === productID)[0];
+            if (accountID) {
+                const xhrAccount = new XMLHttpRequest();
+                xhrAccount.open('POST', 'http://localhost:8081/api/accounts/login');
+                xhrAccount.setRequestHeader('Content-Type', 'application/json');
 
-                if (productInFavorites) {
-                    return;
-                } else {
-                    favorites.push({
-                        "ID": productID,
-                        "Name": product.Name
-                    });
-                }
+                xhrAccount.send(JSON.stringify({UID: accountID}));
 
-                let account = JSON.parse(localStorage.getItem('account'));
-                account.Favorites = favorites;
+                xhrAccount.onload = function() {
+                    if (xhrAccount.status >= 200 && xhrAccount.status < 300) {
+                        let account = JSON.parse(xhrAccount.response);
+                        let favorites = account.Favorites ? account.Favorites : [];
 
-                localStorage.setItem('account', JSON.stringify(account));
+                        let productID = productAddToCart.getAttribute('data-product-id');
+                        let productInFavorites = favorites.filter(product => product.ID === productID)[0];
 
-                const xhr = new XMLHttpRequest();
-                xhr.open('PUT', `http://localhost:8081/api/favorites/update`);
-                xhr.setRequestHeader('Content-Type', 'application/json');
+                        if (productInFavorites) {
+                            return;
+                        } else {
+                            favorites.push({
+                                "ID": productID,
+                                "Name": product.Name
+                            });
+                        }
 
-                let requestData = {
-                    "Account": account,
-                    "Favorites": favorites
-                }
+                        account.Favorites = favorites;
 
-                xhr.send(JSON.stringify(requestData));
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', `http://localhost:8081/api/favorites/update`);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
 
-                xhr.onload = function() {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        initializeFavorites(JSON.parse(localStorage.getItem('account')));
+                        let requestData = {
+                            "Account": account,
+                            "Favorites": favorites
+                        }
+
+                        xhr.send(JSON.stringify(requestData));
+
+                        xhr.onload = function() {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                const toast = new Toast('added-to-favorites-success');
+                                toast.show();
+                                
+                                initializeFavorites(account);
+                            }
+                        }
                     }
                 }
             }
@@ -252,7 +264,7 @@ function setProductWidth() {
 }
 
 const mediaQueryBody = window.matchMedia('(max-width: 1200px)');
-const mediaQueryProduct = window.matchMedia('(max-width: 1400px)');
+const mediaQueryProduct = window.matchMedia('(max-width: 1500px)');
 
 setProductWidth();
 

@@ -225,36 +225,45 @@ function initializeCart(account) {
                             event.preventDefault();
                             let btn = event.target.closest('.cart-remove-item');
 
-                            let account = JSON.parse(localStorage.getItem('account'));
-                            let cart = account.Cart;
-                            let productID = btn.getAttribute('data-product-id');
-                            let productSize = btn.getAttribute('data-product-size');
-        
-                            cart.forEach((productCart) => {
-                                if (productCart.ID === productID) {
-                                    delete productCart.Sizes[productSize];
+                            const xhrAccount = new XMLHttpRequest();
+                            xhrAccount.open('POST', 'http://localhost:8081/api/accounts/login/uid');
+                            xhrAccount.setRequestHeader('Content-Type', 'application/json');
+            
+                            xhrAccount.send(JSON.stringify({UID: localStorage.getItem('accountID')}));
 
-                                    if (Object.keys(productCart.Sizes).length === 0) {
-                                        let index = cart.indexOf(productCart);
-                                        cart.splice(index, 1);
-                                    }
-                                }
-                            });
+                            xhrAccount.onload = function() {
+                                if (xhrAccount.status >= 200 && xhrAccount.status < 300) {
+                                    let account = JSON.parse(xhrAccount.response);
+                                    let cart = account.Cart;
+                                    let productID = btn.getAttribute('data-product-id');
+                                    let productSize = btn.getAttribute('data-product-size');
+                
+                                    cart.forEach((productCart) => {
+                                        if (productCart.ID === productID) {
+                                            delete productCart.Sizes[productSize];
 
-                            account.Cart = cart;
-        
-                            let xhr = new XMLHttpRequest();
-                            xhr.open('PUT', `http://localhost:8081/api/cart/update`);
-                            xhr.setRequestHeader('Content-Type', 'application/json');
-                            xhr.send(JSON.stringify({
-                                "Account": account,
-                                "Cart": cart
-                            }));
-        
-                            xhr.onload = function() {
-                                if (xhr.status >= 200 && xhr.status < 300) {
-                                    localStorage.setItem('account', JSON.stringify(account));
-                                    updateCart(cart, productID, productSize);
+                                            if (Object.keys(productCart.Sizes).length === 0) {
+                                                let index = cart.indexOf(productCart);
+                                                cart.splice(index, 1);
+                                            }
+                                        }
+                                    });
+
+                                    account.Cart = cart;
+                
+                                    let xhr = new XMLHttpRequest();
+                                    xhr.open('PUT', `http://localhost:8081/api/cart/update`);
+                                    xhr.setRequestHeader('Content-Type', 'application/json');
+                                    xhr.send(JSON.stringify({
+                                        "Account": account,
+                                        "Cart": cart
+                                    }));
+                
+                                    xhr.onload = function() {
+                                        if (xhr.status >= 200 && xhr.status < 300) {
+                                            updateCart(cart, productID, productSize);
+                                        }
+                                    };
                                 }
                             };
                         });
@@ -281,8 +290,10 @@ function initializeFavorites(account) {
 
     if (favorites) {
         let favoritesCount = favorites.length;
-        
+
         favorites.forEach((productFavorites) => {
+            if (productFavorites === null) return;
+
             document.querySelector('.favorites-items').innerHTML = '';
 
             const xhr = new XMLHttpRequest();
@@ -343,35 +354,42 @@ function initializeFavorites(account) {
                             event.preventDefault();
                             let btn = event.target.closest('.favorites-remove-item');
 
-                            let account = JSON.parse(localStorage.getItem('account'));
-                            let favorites = account.Favorites;
-                            let productID = btn.getAttribute('data-product-id');
-                            let productPrice = btn.closest('.favorites-item').getAttribute('data-product-price');
-        
-                            favorites.forEach((productFavorites) => {
-                                if (productFavorites.ID === productID) {
-                                    delete favorites[favorites.indexOf(productFavorites)];
+                            const xhrAccount = new XMLHttpRequest();
+                            xhrAccount.open('POST', 'http://localhost:8081/api/accounts/login/uid');
+                            xhrAccount.setRequestHeader('Content-Type', 'application/json');
+            
+                            xhrAccount.send(JSON.stringify({UID: localStorage.getItem('accountID')}));
+                            
+                            xhrAccount.onload = function() {
+                                if (xhrAccount.status >= 200 && xhrAccount.status < 300) {
+                                    let account = JSON.parse(xhrAccount.response);
 
-                                    if (favorites.length === 0) {
-                                        favorites = [];
-                                    }
-                                }
-                            });
-
-                            account.Favorites = favorites;
-        
-                            let xhr = new XMLHttpRequest();
-                            xhr.open('PUT', `http://localhost:8081/api/favorites/update`);
-                            xhr.setRequestHeader('Content-Type', 'application/json');
-                            xhr.send(JSON.stringify({
-                                "Account": account,
-                                "Favorites": favorites
-                            }));
-        
-                            xhr.onload = function() {
-                                if (xhr.status >= 200 && xhr.status < 300) {
-                                    localStorage.setItem('account', JSON.stringify(account));
-                                    updateFavorites(favorites, productID, productPrice);
+                                    let favorites = account.Favorites;
+                                    let favoritesNew = [];
+                                    let productID = btn.getAttribute('data-product-id');
+                                    let productPrice = btn.closest('.favorites-item').getAttribute('data-product-price');
+                
+                                    favorites.forEach((productFavorites) => {
+                                        if (productFavorites.ID !== productID) {
+                                            favoritesNew.push(productFavorites);
+                                        }
+                                    });
+                                    
+                                    account.Favorites = favoritesNew;
+                
+                                    let xhr = new XMLHttpRequest();
+                                    xhr.open('PUT', `http://localhost:8081/api/favorites/update`);
+                                    xhr.setRequestHeader('Content-Type', 'application/json');
+                                    xhr.send(JSON.stringify({
+                                        "Account": account,
+                                        "Favorites": favoritesNew
+                                    }));
+                
+                                    xhr.onload = function() {
+                                        if (xhr.status >= 200 && xhr.status < 300) {
+                                            updateFavorites(favoritesNew, productID, productPrice);
+                                        }
+                                    };
                                 }
                             };
                         });
@@ -499,7 +517,6 @@ if (storedAccount) {
             });
             
             document.querySelector('.account-user .nav-link').innerHTML += account['Forname'];
-
             initializeCart(account);
             initializeFavorites(account);
         } else {
