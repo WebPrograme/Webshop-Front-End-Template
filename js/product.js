@@ -234,3 +234,32 @@ xhr.onload = function() {
         });
     }
 }
+
+function setProductWidth() {
+    let product = document.querySelector('.product');
+
+    if (mediaQueryBody.matches) {
+        product.parentElement.classList.replace('col-10', 'col-12');
+    } else {
+        product.parentElement.classList.replace('col-12', 'col-10');
+    }
+
+    if (mediaQueryProduct.matches) {
+        product.classList.replace('col-10', 'col-12');
+    } else {
+        product.classList.replace('col-12', 'col-10');
+    }
+}
+
+const mediaQueryBody = window.matchMedia('(max-width: 1200px)');
+const mediaQueryProduct = window.matchMedia('(max-width: 1400px)');
+
+setProductWidth();
+
+mediaQueryBody.addEventListener('change', function() {
+    setProductWidth();
+});
+
+mediaQueryProduct.addEventListener('change', function() {
+    setProductWidth();
+});

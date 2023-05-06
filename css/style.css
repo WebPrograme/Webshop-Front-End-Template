@@ -288,6 +288,10 @@
     color: var(--error-color);
 }
 
+.product-price-sale-old {
+    position: absolute;
+}
+
 .product-price-sale-old > span:not(.product-price-sale-old-percent) {
     color: var(--secondary-color);
     text-decoration: line-through;
