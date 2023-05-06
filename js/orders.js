@@ -1,4 +1,4 @@
-import { getAccount } from './account.js';
+import { getAccount, getAccountByID } from './account.js';
 
 function showOrders(account, orderID = null) {
     const xhr = new XMLHttpRequest();
@@ -23,7 +23,7 @@ function showOrders(account, orderID = null) {
                 }
             }
 
-            Object.values(orders).forEach(order => {
+            Object.values(orders).forEach((order, index) => {
                 let orderItem = document.createElement('div');
                 orderItem.classList.add('order-item');
 
@@ -200,6 +200,7 @@ function showOrders(account, orderID = null) {
 let relogin = document.querySelector('.relogin-form');
 let orders = document.querySelector('.order-items');
 let orderID = window.location.search.split('orderID=')[1];
+const accountID = localStorage.getItem('accountID');
 
 if (orderID) {
     relogin.style.display = 'none';
@@ -210,17 +211,27 @@ if (orderID) {
     orders.style.display = 'none';
 }
 
-document.querySelector('.relogin-btn').addEventListener('click', function(e) {
-    e.preventDefault();
-    
-    let email = document.querySelector('[name="Email"]').value;
-    let password = document.querySelector('[name="Password"]').value;
+if (!accountID) {
+    document.querySelector('.relogin-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        let email = document.querySelector('[name="Email"]').value;
+        let password = document.querySelector('[name="Password"]').value;
 
-    getAccount(email, password).then((account) => {
+        getAccount(email, password).then((account) => {
+            relogin.style.display = 'none';
+            orders.style.display = 'block';
+            showOrders(account);
+        }).catch((error) => {
+            console.log(error);
+        });
+    });
+} else {
+    getAccountByID(accountID).then(function(account) {
         relogin.style.display = 'none';
-        orders.style.display = 'block';
-        showOrders(account);
-    }).catch((error) => {
+        orders.style.display = 'flex';
+        showOrders(accountID);
+    }).catch(function(error) {
         console.log(error);
     });
-});
+}

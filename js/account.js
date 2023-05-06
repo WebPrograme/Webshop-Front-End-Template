@@ -38,7 +38,7 @@ function initializeCart(account) {
         document.querySelector('.cart-count').innerHTML = parseInt(cartCount);
     
         const cartItem = document.querySelectorAll('.cart-item[data-product-id="' + productID + '"][data-product-size="' + productSize + '"]')[0];
-        console.log(cartItem, productPrice, productID, productSize)
+        
         if (cartItem && productPrice) {
             const cartQuantityValue = cartItem.querySelector('.cart-quantity-input').value;
             cartItem.querySelector('.cart-price').innerHTML = "€" + ((productPrice / 100) * cartQuantityValue);
@@ -81,8 +81,6 @@ function initializeCart(account) {
                             } else {
                                 account['Cart'][cart.findIndex((product) => product.ID === productCart.ID)]['Sizes'] = productCart.Sizes;
                             }
-                            
-                            localStorage.setItem('account', JSON.stringify(account));
 
                             const xhr = new XMLHttpRequest();
                             xhr.open('PUT', `http://localhost:8081/api/cart/update`);
@@ -143,6 +141,8 @@ function initializeCart(account) {
                         cartQuantityInput.setAttribute('data-product-id', productCart.ID);
                         cartQuantityInput.setAttribute('data-product-price', product.Price);
                         cartQuantityInput.setAttribute('data-product-size', size);
+                        cartQuantityInput.setAttribute('min', 1);
+                        cartQuantityInput.setAttribute('max', product.Sizes[size].Stock);
                         cartQuantityInput.type = 'number';
                         cartQuantityInput.min = 1;
                         cartQuantityInput.value = productCart.Sizes[size].Quantity;
@@ -181,8 +181,6 @@ function initializeCart(account) {
                         document.querySelector('.cart-footer').style.display = 'none';
                     }
 
-                    document.querySelector('.cart-count').innerHTML = cartCount;
-
                     let total = 0;
                     document.querySelectorAll('.cart-price').forEach((element) => {
                         total += parseFloat(element.innerHTML.replace('€', ''));
@@ -194,7 +192,6 @@ function initializeCart(account) {
 
                     document.querySelectorAll('.cart-quantity-input').forEach((element) => {
                         element.addEventListener('change', (event) => {
-                            let account = JSON.parse(localStorage.getItem('account'));
                             let cart = account.Cart;
                             let productID = event.target.getAttribute('data-product-id');
                             let productSize = event.target.getAttribute('data-product-size');
@@ -397,7 +394,7 @@ function initializeFavorites(account) {
     }
 }
 
-function getAccount(email, password) {
+function getAccount(email, password, relogin = false) {
     return new Promise((resolve, reject) => {
         signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
@@ -409,12 +406,32 @@ function getAccount(email, password) {
             xhr.send(JSON.stringify({UID: accountID}));
             xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
+                    if (relogin) {
+                        resolve(JSON.parse(xhr.response));
+                    }
                     resolve(accountID);
                 } else {
                     reject(xhr.response);
                 }
             }
         });
+    });
+}
+
+function getAccountByID(accountID) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `http://localhost:8081/api/accounts/login/uid`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({UID: accountID}));
+
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.response));
+            } else {
+                reject(xhr.response);
+            }
+        }
     });
 }
 
@@ -604,4 +621,4 @@ logoutBtn.forEach((element) => {
     });
 });
 
-export { initializeCart, initializeFavorites, getAccount }
+export { initializeCart, initializeFavorites, getAccount, getAccountByID }

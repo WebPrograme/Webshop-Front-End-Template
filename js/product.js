@@ -33,6 +33,11 @@ xhr.onload = function() {
 
         let productPrice = document.querySelector('.product-price');
         productPrice.innerHTML = `€${parseFloat(product.Price / 100).toFixed(2)}`;
+        if (product.SalePercent != undefined) {
+            productPrice.classList.add('product-price-sale');
+            
+            document.querySelector('.product-price-sale-old').innerHTML = `<span>€${parseFloat(product.SaleOldPrice / 100).toFixed(2)}</span> <span class="product-price-sale-old-percent">-${product.SalePercent}%</span>`;
+        }
 
         let productDescription = document.querySelector('.product-description p');
         productDescription.innerHTML += product.Description;
@@ -92,9 +97,9 @@ xhr.onload = function() {
         let productAddToCart = document.querySelector('.product-add-to-cart');
         let productAddToFavorites = document.querySelector('.product-add-to-favorites');
         let productImageCarouselItemImages = document.querySelectorAll('.product-image-carousel-item-image');
-        let loggedIn = document.cookie.split('accountID=')[1] !== undefined;
+        let accountID = localStorage.getItem('accountID');
 
-        if (loggedIn) {
+        if (accountID) {
             productAddToCart.innerHTML = 'Add to Cart';
         } else {
             productAddToCart.innerHTML = 'Login to Add to Cart';
@@ -104,12 +109,12 @@ xhr.onload = function() {
         productAddToFavorites.setAttribute('data-product-id', productID);
 
         productAddToCart.addEventListener('click', function() {
-            if (loggedIn && productSizesSelect.value !== "Select a Size") {
+            if (accountID && productSizesSelect.value !== "Select a Size") {
                 const xhrAccount = new XMLHttpRequest();
                 xhrAccount.open('POST', 'http://localhost:8081/api/accounts/login');
                 xhrAccount.setRequestHeader('Content-Type', 'application/json');
                 
-                xhrAccount.send(JSON.stringify({UID: document.cookie.split('accountID=')[1]}));
+                xhrAccount.send(JSON.stringify({UID: accountID}));
         
                 xhrAccount.onload = function() {
                     if (xhrAccount.status >= 200 && xhrAccount.status < 300) {

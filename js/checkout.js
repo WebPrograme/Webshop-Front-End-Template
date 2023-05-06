@@ -1,4 +1,4 @@
-import { getAccount } from './account.js';
+import { getAccount, getAccountByID } from './account.js';
 
 function showOrder(account) {
     const cart = account.Cart;
@@ -141,8 +141,6 @@ function showOrder(account) {
                             }
 
                             Promise.all(promises).then(function() {
-                                console.log(totalPrice);
-
                                 document.querySelector('.checkout-step[step="3"]').classList.add('checkout-step-active');
 
                                 document.querySelector('[step-content="2"]').style.display = 'none';
@@ -203,21 +201,33 @@ let checkoutStepActive = document.querySelector('.checkout-step-active');
 checkoutStepActive.classList.remove('checkout-step-active');
 document.querySelector('[step="' + checkoutStepIndex + '"]').classList.add('checkout-step-active');
 
-document.querySelector('.relogin-btn').addEventListener('click', function(e) {
-    e.preventDefault();
+const accountID = localStorage.getItem('accountID');
 
-    let email = document.querySelector('[name="Email"]').value;
-    let password = document.querySelector('[name="Password"]').value;
+if (!accountID) {
+    document.querySelector('.relogin-btn').addEventListener('click', function(e) {
+        e.preventDefault();
 
-    getAccount(email, password).then(function(account) {
-        if (account) {
-            relogin.style.display = 'none';
-            checkout.style.display = 'flex';
-            showOrder(account);
-        } else {
-            alert('Invalid email or password');
-        }
+        let email = document.querySelector('[name="Email"]').value;
+        let password = document.querySelector('[name="Password"]').value;
+
+        getAccount(email, password, true).then(function(account) {
+            if (account) {
+                relogin.style.display = 'none';
+                checkout.style.display = 'flex';
+                showOrder(account);
+            } else {
+                new Toast('login-failed').show();
+            }
+        }).catch(function(error) {
+            console.log(error);
+        });
+    });
+} else {
+    getAccountByID(accountID).then(function(account) {
+        relogin.style.display = 'none';
+        checkout.style.display = 'flex';
+        showOrder(account);
     }).catch(function(error) {
         console.log(error);
     });
-});
+}

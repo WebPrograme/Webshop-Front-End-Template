@@ -142,7 +142,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    row-gap: 3rem;
+    gap: 3rem 1.5rem;
 }
 
 .shop-header {
@@ -170,6 +170,7 @@
 }
 
 .card {
+    position: relative;
     appearance: none;
     width: 18rem;
     color: var(--primary-text-color);
@@ -223,6 +224,25 @@
     margin-bottom: 0.5rem;
 }
 
+.card-sale-price {
+    padding: 0.2rem 0.5rem;
+    color: var(--primary-bg-color);
+    background-color: var(--error-color);
+    border-radius: 2rem;
+}
+
+.card-sale-percent {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    padding: 0.3rem 0.7rem;
+    color: var(--primary-bg-color);
+    background-color: var(--error-color);
+    box-shadow: 0 0 0 0.3rem var(--primary-bg-color);
+    border-radius: 2rem;
+    transform: translate(-50%, -50%);
+}
+
 @media (min-width: 530px) {
     .shop-filter {
         display: flex;
@@ -264,8 +284,23 @@
     color: var(--secondary-color);
 }
 
+.product-price-sale {
+    color: var(--error-color);
+}
+
+.product-price-sale-old > span:not(.product-price-sale-old-percent) {
+    color: var(--secondary-color);
+    text-decoration: line-through;
+    text-align: end;
+}
+
+.product-price-sale-old-percent {
+    color: var(--error-color);
+    text-decoration: none;
+}
+
 .product-categories {
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
 }
 
 .product-categories-list {
@@ -282,6 +317,10 @@
     padding: .3rem .7rem;
     border-radius: 1rem;
     color: var(--primary-bg-color);
+}
+
+.product-category span {
+    font-weight: 500;
 }
 
 .product-category-delete {

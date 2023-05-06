@@ -31,6 +31,10 @@ xhr.onload = function() {
     for (var productID in products) {
         const product = products[productID];
 
+        let sizes = Object.keys(product.Sizes).map(size => parseInt(product.Sizes[size].Stock));
+
+        if (sizes.every(size => size === 0)) continue;
+
         let productCard = document.createElement('a');
         productCard.classList.add('card', 'product-card');
         productCard.setAttribute('data-search', 'true');
@@ -81,7 +85,8 @@ xhr.onload = function() {
 
         let productCardPrice = document.createElement('p');
         productCardPrice.classList.add('card-text', 'card-price', 'text-muted');
-        productCardPrice.innerHTML = `€${product.Price / 100}`;
+        productCardPrice.innerHTML = `€${(product.Price / 100).toFixed(2)}`;
+        if (product.SaleOldPrice !== undefined) productCardPrice.classList.add('card-sale-price');
 
         let productCardButton = document.createElement('button');
         productCardButton.classList.add('btn', 'btn-primary');
@@ -97,6 +102,14 @@ xhr.onload = function() {
 
         productCard.appendChild(productImageContainer);
         productCard.appendChild(productCardBody);
+
+        if (product.SalePercent !== undefined) {
+            let productCardSalePercent = document.createElement('h3');
+            productCardSalePercent.classList.add('card-sale-percent');
+            productCardSalePercent.innerHTML = `-${product.SalePercent}%`;
+
+            productCardBody.appendChild(productCardSalePercent);
+        }
         
         shop.appendChild(productCard);
     }
