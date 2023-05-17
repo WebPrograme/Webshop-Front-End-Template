@@ -92,7 +92,7 @@ fetch(`http://localhost:8081/api/products/${productID}`)
     let productAddToCart = document.querySelector('.product-add-to-cart');
     let productAddToFavorites = document.querySelector('.product-add-to-favorites');
     let productImageCarouselItemImages = document.querySelectorAll('.product-image-carousel-item-image');
-    let accountID = localStorage.getItem('accountID');
+    let accountID = document.cookie.split('; ').find(row => row.startsWith('accountID')).split('=')[1];
 
     if (accountID) {
         productAddToCart.innerHTML = 'Add to Cart';

@@ -1,4 +1,4 @@
-import { getAccount, getAccountByID } from './account.js';
+import { Account } from './account.js';
 
 function createOrderProducts(orderItem, products, order) {
     let orderItemProducts = orderItem.querySelector('.order-item-products');
@@ -137,7 +137,6 @@ function showOrders(account, orderID = null) {
 let relogin = document.querySelector('.relogin-form');
 let orders = document.querySelector('.order-items');
 let orderID = window.location.search.split('orderID=')[1];
-const accountID = localStorage.getItem('accountID');
 
 if (orderID) {
     relogin.style.display = 'none';
@@ -148,7 +147,11 @@ if (orderID) {
     orders.style.display = 'none';
 }
 
-if (!accountID) {
+new Account().getAccount().then((account) => {
+    relogin.style.display = 'none';
+    orders.style.display = 'flex';
+    showOrders(account.UID);
+}).catch((error) => {
     document.querySelector('.relogin-btn').addEventListener('click', function(e) {
         e.preventDefault();
         
@@ -163,12 +166,4 @@ if (!accountID) {
             console.log(error);
         });
     });
-} else {
-    getAccountByID(accountID).then(function(account) {
-        relogin.style.display = 'none';
-        orders.style.display = 'flex';
-        showOrders(accountID);
-    }).catch(function(error) {
-        console.log(error);
-    });
-}
+});

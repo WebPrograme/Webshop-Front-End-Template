@@ -1,4 +1,4 @@
-import { getAccount, getAccountByID } from './account.js';
+import { Account } from './account.js';
 
 function createItem(product, productCart, size) {
     let item = document.createElement('div');
@@ -171,39 +171,30 @@ class CheckoutSteps {
 let relogin = document.querySelector('.relogin-form');
 let checkout = document.querySelector('.checkout-steps');
 let checkoutStepIndex = window.location.search.split('step=')[1];
-let checkoutSteps = document.querySelectorAll('.checkout-step');
 let checkoutStepActive = document.querySelector('.checkout-step-active');
 
 checkoutStepActive.classList.remove('checkout-step-active');
 document.querySelector('[step="' + checkoutStepIndex + '"]').classList.add('checkout-step-active');
 
-const accountID = localStorage.getItem('accountID');
+new Account().getAccount().then(function(account) {
+    relogin.style.display = 'none';
+    checkout.style.display = 'flex';
 
-if (!accountID) {
+    new CheckoutSteps(checkoutStepIndex, account);
+}).catch(function(error) {
     document.querySelector('.relogin-btn').addEventListener('click', function(e) {
         e.preventDefault();
 
         let email = document.querySelector('[name="Email"]').value;
         let password = document.querySelector('[name="Password"]').value;
 
-        getAccount(email, password, true).then(function(account) {
-            if (account) {
-                relogin.style.display = 'none';
-                checkout.style.display = 'flex';
-                new CheckoutSteps(checkoutStepIndex, account);
-            } else {
-                new Toast('login-failed').show();
-            }
+        new Account().login(email, password).then(function(account) {
+            relogin.style.display = 'none';
+            checkout.style.display = 'flex';
+
+            new CheckoutSteps(checkoutStepIndex, account);
         }).catch(function(error) {
-            console.log(error);
+            new Toast('login-failed').show();
         });
     });
-} else {
-    getAccountByID(accountID).then(function(account) {
-        relogin.style.display = 'none';
-        checkout.style.display = 'flex';
-        new CheckoutSteps(checkoutStepIndex, account);
-    }).catch(function(error) {
-        console.log(error);
-    });
-}
+});
