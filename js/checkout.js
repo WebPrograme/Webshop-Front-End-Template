@@ -1,194 +1,170 @@
 import { getAccount, getAccountByID } from './account.js';
 
-function showOrder(account) {
-    const cart = account.Cart;
-    const order = document.querySelector('.order');
-    const orderList = document.querySelector('.order-list');
-    const orderTotalPrice = document.querySelector('.order-footer-total-price');
+function createItem(product, productCart, size) {
+    let item = document.createElement('div');
+    let itemHTML = `
+    <div class="order-item">
+        <img class="order-item-img col-3" src="${product.Images[0]}" alt="${product.Name}">
 
-    let totalPrice = 0;
+        <div class="order-item-info col-8">
+            <div class="order-item-header">
+                <h2 class="order-item-info-name">${product.Name}</h2>
+                <h3 class="order-item-info-price">€${(product.Price / 100).toFixed(2)}</h3>
+            </div>
+            
+            <div class="order-item-info-size-quantity">
+                <h3 class="order-item-info-size"><span class="text-muted">Size: </span> ${size}</h3>
+                <h3 class="order-item-info-quantity"><span class="text-muted">Quantity: </span> ${productCart.Sizes[size]['Quantity']}</h3>
+            </div>
+            
+            <p class="order-item-info-description">${product.Description}</p>
+        </div>
+    </div>`;
 
-    for (let productCart of cart) {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'http://localhost:8081/api/products/' + productCart.ID);
-        xhr.send();
+    item.innerHTML = itemHTML;
+    return item;
+}
 
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                let product = JSON.parse(xhr.response);
+class CheckoutSteps {
+    constructor(step, account) {
+        this.steps = [this.order, this.shipment, this.payment];
+        this.steps[step - 1](account);
+    }
 
+    async order(account) {
+        const cart = account.Cart;
+        const order = document.querySelector('.order');
+        const orderList = document.querySelector('.order-list');
+        const orderTotalPrice = document.querySelector('.order-footer-total-price');
+    
+        let totalPrice = 0;
+    
+        for (let productCart of cart) {
+            fetch(`http://localhost:8081/api/products/${productCart.ID}`)
+            .then(response => response.json())
+            .then(product => {
                 Object.keys(productCart.Sizes).forEach(function(size, index) {
-                    let productItem = document.createElement('div');
-                    productItem.classList.add('order-item');
-
-                    let productItemImg = document.createElement('img');
-                    productItemImg.classList.add('order-item-img', 'col-3');
-                    productItemImg.src = product.Images[0];
-                    productItemImg.alt = product.Name;
-                    
-                    let productItemInfo = document.createElement('div');
-                    productItemInfo.classList.add('order-item-info', 'col-8');
-
-                    let productItemHeader = document.createElement('div');
-                    productItemHeader.classList.add('order-item-header');
-
-                    let productItemHeaderName = document.createElement('h2');
-                    productItemHeaderName.classList.add('order-item-info-name');
-                    productItemHeaderName.innerHTML = product.Name;
-
-                    let productItemHeaderPrice = document.createElement('h3');
-                    productItemHeaderPrice.classList.add('order-item-info-price');
-                    productItemHeaderPrice.innerHTML = '€' + (product.Price / 100).toFixed(2);
-
-                    let productItemInfoSizeQuantity = document.createElement('div');
-                    productItemInfoSizeQuantity.classList.add('order-item-info-size-quantity');
-
-                    let productItemInfoSize = document.createElement('h3');
-                    productItemInfoSize.classList.add('order-item-info-size');
-                    productItemInfoSize.innerHTML = '<span class="text-muted">Size: </span> ' + size;
-
-                    let productItemInfoQuantity = document.createElement('h3');
-                    productItemInfoQuantity.classList.add('order-item-info-quantity');
-                    productItemInfoQuantity.innerHTML = '<span class="text-muted">Quantity: </span> ' + productCart.Sizes[size]['Quantity'];
-
-                    let productItemInfoDescription = document.createElement('p');
-                    productItemInfoDescription.classList.add('order-item-info-description');
-                    productItemInfoDescription.innerHTML = product.Description;
-
-                    let productItemSeperator = document.createElement('hr');
-                    productItemSeperator.classList.add('order-item-seperator');
-
-                    productItemHeader.appendChild(productItemHeaderName);
-                    productItemHeader.appendChild(productItemHeaderPrice);
-
-                    productItemInfoSizeQuantity.appendChild(productItemInfoSize);
-                    productItemInfoSizeQuantity.appendChild(productItemInfoQuantity);
-
-                    productItemInfo.appendChild(productItemHeader);
-                    productItemInfo.appendChild(productItemInfoSizeQuantity);
-                    productItemInfo.appendChild(productItemInfoDescription);
-
-                    productItem.appendChild(productItemImg);
-                    productItem.appendChild(productItemInfo);
-
-                    orderList.appendChild(productItem);
-
-                    if (index < Object.keys(productCart.Sizes).length - 1) {
-                        orderList.appendChild(productItemSeperator);
-                    }
-
-                    totalPrice += product.Price * productCart.Sizes[size]['Quantity'];
+                        let productItem = createItem(product, productCart, size);
+    
+                        let productItemSeperator = document.createElement('hr');
+                        productItemSeperator.classList.add('order-item-seperator');
+    
+                        orderList.appendChild(productItem);
+    
+                        if (index < Object.keys(productCart.Sizes).length - 1) {
+                            orderList.appendChild(productItemSeperator);
+                        }
+    
+                        totalPrice += product.Price * productCart.Sizes[size]['Quantity'];
                 });
-
+    
                 orderTotalPrice.innerHTML = '€' + (totalPrice / 100).toFixed(2);
 
                 order.style.display = 'block';
+            });
+        }
 
-                let orderBtn = document.querySelector('.order-btn');
+        document.querySelector('.order-btn').addEventListener('click', function(e) {
+            CheckoutSteps.prototype.shipment(account);
+        }.bind(this));
+    }
 
-                orderBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
+    async shipment(account) {
+        const cart = account.Cart;
 
-                    document.querySelector('.shipment input[name="FirstName"]').value = account.Forname;
-                    document.querySelector('.shipment input[name="LastName"]').value = account.Surname;
-                    document.querySelector('.shipment input[name="Email"]').value = account.Email;
-                    document.querySelector('.shipment input[name="Phone"]').value = account.Phone;
-                    
-                    document.querySelector('.checkout-step[step="2"]').classList.add('checkout-step-active');
-
-                    document.querySelector('[step-content="1"]').style.display = 'none';
-                    document.querySelector('[step-content="2"]').style.display = 'flex';
-
-                    document.querySelector('.shipment-btn').addEventListener('click', function(e) {
-                        let shipmentInputs = document.querySelectorAll('.shipment input');
-                        let shipmentValid = true;
-                        let shipmentValidInputs = [];
-
-                        for (let shipmentInput of shipmentInputs) {
-                            if (shipmentInput.value === '') {
-                                shipmentValid = false;
-                                shipmentValidInputs.push(shipmentInput);
-                            }
-                        }
-
-                        if (shipmentValid) {
-                            let shipmentDetails = {}
-                            shipmentInputs.forEach(function(shipmentInput) {
-                                shipmentDetails[shipmentInput.name] = shipmentInput.value;
+        document.querySelector('.shipment input[name="FirstName"]').value = account.Forname;
+        document.querySelector('.shipment input[name="LastName"]').value = account.Surname;
+        document.querySelector('.shipment input[name="Email"]').value = account.Email;
+        document.querySelector('.shipment input[name="Phone"]').value = account.Phone;
+        
+        document.querySelector('.checkout-step[step="2"]').classList.add('checkout-step-active');
+    
+        document.querySelector('[step-content="1"]').style.display = 'none';
+        document.querySelector('[step-content="2"]').style.display = 'flex';
+    
+        document.querySelector('.shipment-btn').addEventListener('click', function(e) {
+            let shipmentInputs = document.querySelectorAll('.shipment input');
+            let shipmentValid = true;
+            let shipmentValidInputs = [];
+    
+            for (let shipmentInput of shipmentInputs) {
+                if (shipmentInput.value === '') {
+                    shipmentValid = false;
+                    shipmentValidInputs.push(shipmentInput);
+                }
+            }
+    
+            if (shipmentValid) {
+                let shipmentDetails = {}
+                shipmentInputs.forEach(function(shipmentInput) {
+                    shipmentDetails[shipmentInput.name] = shipmentInput.value;
+                });
+    
+                let totalPrice = 0;
+                let promises = [];
+    
+                for (let productCart of cart) {
+                    promises.push(new Promise(function(resolve, reject) {
+                        fetch(`http://localhost:8081/api/products/${productCart.ID}`)
+                        .then(response => response.json())
+                        .then(product => {
+                            Object.keys(productCart.Sizes).forEach(function(size) {
+                                totalPrice += product.Price * productCart.Sizes[size]['Quantity'];
                             });
+    
+                            resolve();
+                        });
+                    }));
+                }
+    
+                Promise.all(promises).then(function() {
+                    document.querySelector('.checkout-step[step="3"]').classList.add('checkout-step-active');
+    
+                    document.querySelector('[step-content="2"]').style.display = 'none';
+                    document.querySelector('[step-content="3"]').style.display = 'flex';
+    
+                    document.querySelectorAll('.payment-methods a').forEach(function(paymentMethod) {
+                        paymentMethod.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            let method = e.target.closest('a').getAttribute('method');
 
-                            let totalPrice = 0;
-                            let promises = [];
-
-                            for (let productCart of cart) {
-                                promises.push(new Promise(function(resolve, reject) {
-                                    const xhr = new XMLHttpRequest();
-                                    xhr.open('GET', 'http://localhost:8081/api/products/' + productCart.ID);
-                                    xhr.send();
-
-                                    xhr.onload = function() {
-                                        if (xhr.status >= 200 && xhr.status < 300) {
-                                            let product = JSON.parse(xhr.response);
-
-                                            Object.keys(productCart.Sizes).forEach(function(size, index) {
-                                                totalPrice += product.Price * productCart.Sizes[size]['Quantity'];
-                                            });
-
-                                            resolve();
-                                        }
-                                    }
-                                }));
-                            }
-
-                            Promise.all(promises).then(function() {
-                                document.querySelector('.checkout-step[step="3"]').classList.add('checkout-step-active');
-
-                                document.querySelector('[step-content="2"]').style.display = 'none';
-                                document.querySelector('[step-content="3"]').style.display = 'flex';
-
-                                document.querySelectorAll('.payment-methods a').forEach(function(paymentMethod) {
-                                    paymentMethod.addEventListener('click', function(e) {
-                                        e.preventDefault();
-                                        
-                                        // The payment itself is not implemented, so the user is redirected to the order confirmation page
-
-                                        const xhr = new XMLHttpRequest();
-                                        xhr.open('POST', 'http://localhost:8081/api/orders/add');
-                                        xhr.setRequestHeader('Content-Type', 'application/json');
-                                        xhr.send(JSON.stringify({
-                                            "Account": account,
-                                            "Order": {
-                                                "Products": account.Cart
-                                            },
-                                            "Shipment": shipmentDetails,
-                                            "Price": totalPrice,
-                                            "Payment": {
-                                                "Method": paymentMethod.getAttribute('method')
-                                            },
-                                        }));
-
-                                        xhr.onload = function() {
-                                            if (xhr.status >= 200 && xhr.status < 300) {
-                                                delete account.Cart;
-
-                                                localStorage.setItem('account', JSON.stringify(account));
-                                                window.location.href = '/pages/orders.html';
-                                            }
-                                        }
-                                    });
-                                });
-                            });
-                        } else {
-                            for (let shipmentValidInput of shipmentValidInputs) {
-                                shipmentValidInput.classList.add('is-invalid');
-                            }
-
-                            document.querySelector('.shipment-btn').innerHTML = 'Please fill in all fields';
-                        }
+                            CheckoutSteps.prototype.payment(account, shipmentDetails, totalPrice, method);
+                        });
                     });
                 });
+            } else {
+                for (let shipmentValidInput of shipmentValidInputs) {
+                    shipmentValidInput.classList.add('is-invalid');
+                }
+    
+                document.querySelector('.shipment-btn').innerHTML = 'Please fill in all fields';
             }
-        }
+        });
+    }
+    
+    async payment(account, shipmentDetails, totalPrice, paymentMethod) {
+        // The payment itself is not implemented, so the user is redirected to the order confirmation page
+
+        fetch('http://localhost:8081/api/orders/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + account.UID
+            },
+            body: JSON.stringify({
+                "Account": account,
+                "Order": {
+                    "Products": account.Cart
+                },
+                "Shipment": shipmentDetails,
+                "Price": totalPrice,
+                "Payment": {
+                    "Method": paymentMethod
+                },
+            })
+        }).then(response => {
+            window.location.href = './pages/order.html'
+        });
     }
 }
 
@@ -214,7 +190,7 @@ if (!accountID) {
             if (account) {
                 relogin.style.display = 'none';
                 checkout.style.display = 'flex';
-                showOrder(account);
+                new CheckoutSteps(checkoutStepIndex, account);
             } else {
                 new Toast('login-failed').show();
             }
@@ -226,7 +202,7 @@ if (!accountID) {
     getAccountByID(accountID).then(function(account) {
         relogin.style.display = 'none';
         checkout.style.display = 'flex';
-        showOrder(account);
+        new CheckoutSteps(checkoutStepIndex, account);
     }).catch(function(error) {
         console.log(error);
     });

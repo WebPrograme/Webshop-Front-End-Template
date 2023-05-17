@@ -736,6 +736,14 @@ body:has(.offcanvas.open) {
     justify-content: center;
 }
 
+.shipment .input-group:last-of-type {
+    margin-bottom: 1rem;
+}
+
+.shipment .input-group label {
+    font-size: 1rem;
+}
+
 .shipment .input-group > div {
     flex: none;
 }

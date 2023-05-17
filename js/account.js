@@ -23,10 +23,160 @@ const loginBtn = document.querySelector('.login-btn');
 const registerBtn = document.querySelector('.register-btn');
 const storedAccount = localStorage.getItem('accountID');
 
-function initializeCart(account) {
-    const cart = account.Cart;
+// Cart
+class Cart {
+    async addProduct(productID, productSize, product, account) { // Add Product to Cart
+        fetch('http://localhost:8081/api/accounts/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + account
+            },
+            body: JSON.stringify({})
+        }).then(response => response.json())
+        .then(account => {
+            let cart = account.Cart ? account.Cart : [];
+            let productInCart = cart.filter(product => product.ID === productID)[0];
+
+            if (productInCart) {
+                if (productInCart["Sizes"][productSize]) {
+                    cart[cart.indexOf(productInCart)]["Sizes"][productSize]["Quantity"] += 1;
+                } else {
+                    cart[cart.indexOf(productInCart)]["Sizes"][productSize] = {
+                        "Quantity": 1
+                    };
+                }
+            } else {
+                cart.push({
+                    "ID": productID,
+                    "Name": product.Name,
+                    "Sizes": {
+                        [productSize]: {
+                            "Quantity": 1
+                        }
+                    }
+                });
+            }
+
+            account.Cart = cart;
+            console.log(account);
+            
+            fetch(`http://localhost:8081/api/accounts/cart/update`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + account.UID
+                },
+                body: JSON.stringify({
+                    "Cart": cart
+                })
+            }).then(response => {
+                if (response.status === 200) {
+                    document.querySelector('.cart-count').innerHTML = cart.length;
     
-    function updateCart(cart, productID = false, productSize = false, productPrice = false) {
+                    const toast = new Toast('added-to-cart-success');
+                    toast.show();
+
+                    this.initialize(account);
+                }
+            });
+        });
+    }
+
+    async initialize(account) { // Initialize Cart
+        const uid = account ? account.UID : localStorage.getItem('accountID');
+        const cart = account.Cart ? account.Cart : [];
+        let cartCount = 0;
+        
+        cart.forEach((productCart) => {
+            if (!productCart.Sizes) return;
+    
+            document.querySelector('.cart-items').innerHTML = '';
+
+            // Get Product
+            fetch(`http://localhost:8081/api/products/${productCart.ID}`)
+            .then(response => response.json())
+            .then(product => {
+                Object.keys(productCart.Sizes).forEach((size) => {
+                    /// Check if Product is still in Stock
+                    if (product['Sizes'][size]['Stock'] < productCart.Sizes[size]['Quantity']) {
+                        delete productCart.Sizes[size];
+
+                        if (Object.keys(productCart.Sizes).length === 0) {
+                            cart.splice(cart.findIndex((product) => product.ID === productCart.ID), 1);
+                        } else {
+                            account['Cart'][cart.findIndex((product) => product.ID === productCart.ID)]['Sizes'] = productCart.Sizes;
+                        }
+
+                        fetch(`http://localhost:8081/api/accounts/cart/update`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + uid
+                            },
+                            body: JSON.stringify({
+                                "Cart": cart
+                            })
+                        });
+
+                        return;
+                    }
+
+                    // Create Cart Item
+                    this.createItem(product, productCart, size);
+                });
+
+                // Update Cart Count
+                cartCount += Object.values(productCart.Sizes).reduce((accumulator, currentValue) => {
+                    return accumulator + currentValue.Quantity;
+                }, 0);
+    
+                // Give Adittional Styling to Cart
+                if (cartCount > 0) {
+                    document.querySelector('.cart-empty').style.display = 'none';
+                    document.querySelector('.cart-footer').style.display = 'block';
+        
+                    document.querySelector('.cart-count').innerHTML = parseInt(cartCount);
+                } else {
+                    document.querySelector('.cart-empty').style.display = 'block';
+                    document.querySelector('.cart-footer').style.display = 'none';
+                }
+    
+                let total = 0;
+                document.querySelectorAll('.cart-price').forEach((element) => {
+                    total += parseFloat(element.innerHTML.replace('€', ''));
+                });
+    
+                document.querySelector('.cart-total-price').innerHTML = '€' + total
+                document.querySelector('.cart-footer').style.display = 'block';
+    
+                // CART ITEM EVENTS
+                // Update Quantity
+                document.querySelectorAll('.cart-quantity-input').forEach((element) => {
+                    element.addEventListener('change', (event) => {
+                        this.updateQuantity(event, account);
+                    });
+                });
+    
+                // Remove Item
+                document.querySelectorAll('.cart-remove-item').forEach((element) => {
+                    element.addEventListener('click', (event) => {
+                        event.preventDefault();
+    
+                        this.removeItem(event, account);
+                    });
+                });
+            });
+        });
+        
+        // CART EVENTS
+        document.querySelector('.cart-checkout').addEventListener('click', (event) => {
+            event.preventDefault();
+            window.location.href = '/pages/checkout.html?step=1';
+        });
+    }
+
+    update(cart, productID = false, productSize = false, productPrice = false) { // Update Cart
         let cartCount = 0;
         
         cart.forEach((productCart) => {
@@ -34,7 +184,7 @@ function initializeCart(account) {
                 return accumulator + currentValue.Quantity;
             }, 0);
         });
-
+    
         document.querySelector('.cart-count').innerHTML = parseInt(cartCount);
     
         const cartItem = document.querySelectorAll('.cart-item[data-product-id="' + productID + '"][data-product-size="' + productSize + '"]')[0];
@@ -45,250 +195,117 @@ function initializeCart(account) {
         } else {
             document.querySelector('.cart-items').removeChild(cartItem);
         }
-
+    
         let total = 0;
         document.querySelectorAll('.cart-price').forEach((element) => {
             total += parseFloat(element.innerHTML.replace('€', ''));
         });
-
+    
         document.querySelector('.cart-total-price').innerHTML = '€' + total;
     }
 
-    if (cart) {
-        let cartCount = 0;
-        
+    createItem(product, productCart, size) { // Create Cart Item
+        let cartItemHTML = `
+        <div class="cart-item" data-product-id="${productCart.ID}" data-product-size="S">
+            <img class="cart-image col-4" src="${product.Images[0]}" alt="${product.Name}">
+            
+            <div class="cart-content">
+                <div class="cart-header">
+                    <h3 class="cart-title"><a href="/product.html?id=${productCart.ID}">${product.Name}</a></h3>
+                    <button class="cart-remove cart-remove-item" data-product-id="${productCart.ID}" data-product-size="${size}"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div class="cart-sizes">
+                    <div class="cart-size">
+                        <h4 class="cart-size-title">Size <span class="cart-size-value">${size}</span></h4>
+                    </div>
+                </div>
+                
+                <div class="cart-quantity">
+                    <input class="cart-quantity-input input w-min" data-product-id="${productCart.ID}" data-product-price="${product.Price}" data-product-size="${size}" value="1" min="1" max="${product.Sizes[size].Stock}" type="number">
+                    <h3 class="cart-price">€${(product.Price / 100) * productCart.Sizes[size].Quantity}</h3>
+                </div>
+            </div>
+        </div>`;
+
+        document.querySelector('.cart-items').innerHTML += cartItemHTML;
+    }
+
+    updateQuantity(event, account) { // Update Quantity
+        let cart = account.Cart;
+        let productID = event.target.getAttribute('data-product-id');
+        let productSize = event.target.getAttribute('data-product-size');
+        let productPrice = event.target.getAttribute('data-product-price');
+        let quantity = event.target.value;
+
         cart.forEach((productCart) => {
-            if (!productCart.Sizes) {
-                return;
+            if (productCart.ID === productID) {
+                productCart.Sizes[productSize].Quantity = quantity;
             }
-
-            document.querySelector('.cart-items').innerHTML = '';
-
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', `http://localhost:8081/api/products/${productCart.ID}`);
-            xhr.send();
-
-            xhr.onload = function() {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    const product = JSON.parse(xhr.response);
-
-                    Object.keys(productCart.Sizes).forEach((size) => {
-                        if (product['Sizes'][size]['Stock'] < productCart.Sizes[size]['Quantity']) {
-                            delete productCart.Sizes[size];
-
-                            if (Object.keys(productCart.Sizes).length === 0) {
-                                cart.splice(cart.findIndex((product) => product.ID === productCart.ID), 1);
-                            } else {
-                                account['Cart'][cart.findIndex((product) => product.ID === productCart.ID)]['Sizes'] = productCart.Sizes;
-                            }
-
-                            const xhr = new XMLHttpRequest();
-                            xhr.open('PUT', `http://localhost:8081/api/cart/update`);
-                            xhr.setRequestHeader('Content-Type', 'application/json');
-
-                            let requestData = {
-                                "Account": account,
-                                "Cart": cart
-                            }
-
-                            xhr.send(JSON.stringify(requestData));
-                            return;
-                        }
-
-                        let cartItem = document.createElement('div');
-                        cartItem.classList.add('cart-item');
-                        cartItem.setAttribute('data-product-id', productCart.ID);
-                        cartItem.setAttribute('data-product-size', size);
-    
-                        let cartImage = document.createElement('img');
-                        cartImage.classList.add('cart-image', 'col-4');
-                        cartImage.src = product.Images[0];
-                        cartImage.alt = product.Name;
-    
-                        let cartContent = document.createElement('div');
-                        cartContent.classList.add('cart-content');
-    
-                        let cartHeader = document.createElement('div');
-                        cartHeader.classList.add('cart-header');
-    
-                        let cartTitle = document.createElement('h3');
-                        cartTitle.classList.add('cart-title');
-                        cartTitle.innerHTML = '<a href="/product.html?id=' + productCart.ID + '">' + product.Name + '</a>'
-    
-                        let cartRemove = document.createElement('button');
-                        cartRemove.classList.add('cart-remove', 'cart-remove-item');
-                        cartRemove.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-                        cartRemove.setAttribute('data-product-id', productCart.ID);
-                        cartRemove.setAttribute('data-product-size', size);
-    
-                        cartHeader.appendChild(cartTitle);
-                        cartHeader.appendChild(cartRemove);
-    
-                        let cartSizes = document.createElement('div');
-                        cartSizes.classList.add('cart-sizes');
-                        let cartSize = document.createElement('div');
-                        cartSize.classList.add('cart-size');
-
-                        let cartSizeTitle = document.createElement('h4');
-                        cartSizeTitle.classList.add('cart-size-title');
-                        cartSizeTitle.innerHTML = "Size <span class='cart-size-value'>" + size + "</span>";
-
-                        let cartQuantity = document.createElement('div');
-                        cartQuantity.classList.add('cart-quantity');
-
-                        let cartQuantityInput = document.createElement('input');
-                        cartQuantityInput.classList.add('cart-quantity-input', 'input', 'w-min');
-                        cartQuantityInput.setAttribute('data-product-id', productCart.ID);
-                        cartQuantityInput.setAttribute('data-product-price', product.Price);
-                        cartQuantityInput.setAttribute('data-product-size', size);
-                        cartQuantityInput.setAttribute('min', 1);
-                        cartQuantityInput.setAttribute('max', product.Sizes[size].Stock);
-                        cartQuantityInput.type = 'number';
-                        cartQuantityInput.min = 1;
-                        cartQuantityInput.value = productCart.Sizes[size].Quantity;
-
-                        let cartPrice = document.createElement('h3');
-                        cartPrice.classList.add('cart-price');
-                        cartPrice.innerHTML = "€" + (product.Price / 100) * productCart.Sizes[size].Quantity;
-
-                        cartQuantity.appendChild(cartQuantityInput);
-                        cartQuantity.appendChild(cartPrice);
-
-                        cartSize.appendChild(cartSizeTitle);
-                        cartSizes.appendChild(cartSize);
-
-                        cartContent.appendChild(cartHeader);
-                        cartContent.appendChild(cartSizes);
-                        cartContent.appendChild(cartQuantity);
-    
-                        cartItem.appendChild(cartImage);
-                        cartItem.appendChild(cartContent);
-    
-                        document.querySelector('.cart-items').appendChild(cartItem);
-                    });
-
-                    cartCount += Object.values(productCart.Sizes).reduce((accumulator, currentValue) => {
-                        return accumulator + currentValue.Quantity;
-                    }, 0);
-
-                    if (cartCount > 0) {
-                        document.querySelector('.cart-empty').style.display = 'none';
-                        document.querySelector('.cart-footer').style.display = 'block';
-            
-                        document.querySelector('.cart-count').innerHTML = parseInt(cartCount);
-                    } else {
-                        document.querySelector('.cart-empty').style.display = 'block';
-                        document.querySelector('.cart-footer').style.display = 'none';
-                    }
-
-                    let total = 0;
-                    document.querySelectorAll('.cart-price').forEach((element) => {
-                        total += parseFloat(element.innerHTML.replace('€', ''));
-                    });
-
-                    document.querySelector('.cart-total-price').innerHTML = '€' + total;
-
-                    document.querySelector('.cart-footer').style.display = 'block';
-
-                    document.querySelectorAll('.cart-quantity-input').forEach((element) => {
-                        element.addEventListener('change', (event) => {
-                            let cart = account.Cart;
-                            let productID = event.target.getAttribute('data-product-id');
-                            let productSize = event.target.getAttribute('data-product-size');
-                            let productPrice = event.target.getAttribute('data-product-price');
-                            let quantity = event.target.value;
-        
-                            cart.forEach((productCart) => {
-                                if (productCart.ID === productID) {
-                                    productCart.Sizes[productSize].Quantity = quantity;
-                                }
-                            });
-        
-                            let xhr = new XMLHttpRequest();
-                            xhr.open('PUT', `http://localhost:8081/api/cart/update`);
-                            xhr.setRequestHeader('Content-Type', 'application/json');
-                            xhr.send(JSON.stringify({
-                                "Account": account,
-                                "Cart": cart
-                            }));
-        
-                            xhr.onload = function() {
-                                if (xhr.status >= 200 && xhr.status < 300) {
-                                    updateCart(cart, productID, productSize, productPrice);
-                                }
-                            };
-                        });
-                    });
-
-                    document.querySelectorAll('.cart-remove-item').forEach((element) => {
-                        element.addEventListener('click', (event) => {
-                            event.preventDefault();
-                            let btn = event.target.closest('.cart-remove-item');
-
-                            const xhrAccount = new XMLHttpRequest();
-                            xhrAccount.open('POST', 'http://localhost:8081/api/accounts/login/uid');
-                            xhrAccount.setRequestHeader('Content-Type', 'application/json');
-            
-                            xhrAccount.send(JSON.stringify({UID: localStorage.getItem('accountID')}));
-
-                            xhrAccount.onload = function() {
-                                if (xhrAccount.status >= 200 && xhrAccount.status < 300) {
-                                    let account = JSON.parse(xhrAccount.response);
-                                    let cart = account.Cart;
-                                    let productID = btn.getAttribute('data-product-id');
-                                    let productSize = btn.getAttribute('data-product-size');
-                
-                                    cart.forEach((productCart) => {
-                                        if (productCart.ID === productID) {
-                                            delete productCart.Sizes[productSize];
-
-                                            if (Object.keys(productCart.Sizes).length === 0) {
-                                                let index = cart.indexOf(productCart);
-                                                cart.splice(index, 1);
-                                            }
-                                        }
-                                    });
-
-                                    account.Cart = cart;
-                
-                                    let xhr = new XMLHttpRequest();
-                                    xhr.open('PUT', `http://localhost:8081/api/cart/update`);
-                                    xhr.setRequestHeader('Content-Type', 'application/json');
-                                    xhr.send(JSON.stringify({
-                                        "Account": account,
-                                        "Cart": cart
-                                    }));
-                
-                                    xhr.onload = function() {
-                                        if (xhr.status >= 200 && xhr.status < 300) {
-                                            updateCart(cart, productID, productSize);
-                                        }
-                                    };
-                                }
-                            };
-                        });
-                    });
-                }
-            };
         });
 
-        document.querySelector('.cart-checkout').addEventListener('click', (event) => {
-            event.preventDefault();
-            window.location.href = '/pages/checkout.html?step=1';
+        // Update Cart
+        fetch('http://localhost:8081/api/accounts/cart/update', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + account.UID
+            },
+            body: JSON.stringify({
+                "Cart": cart
+            })
+        }).then((response) => {
+            if (response.status >= 200 && response.status < 300) {
+                this.update(cart, productID, productSize, productPrice);
+            }
+        });
+    }
+
+    removeItem(event, account) { // Remove Item
+        const btn = event.target.closest('.cart-remove-item');
+
+        let cart = account.Cart;
+        let productID = btn.getAttribute('data-product-id');
+        let productSize = btn.getAttribute('data-product-size');
+        let productPrice = btn.getAttribute('data-product-price');
+    
+        cart.forEach((productCart) => {
+            if (productCart.ID === productID) {
+                delete productCart.Sizes[productSize];
+
+                if (Object.keys(productCart.Sizes).length === 0) {
+                    let index = cart.indexOf(productCart);
+                    cart.splice(index, 1);
+                }
+            }
+        });
+
+        account.Cart = cart;
+    
+        // Update Cart
+        fetch('http://localhost:8081/api/accounts/cart/update', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + account.UID
+            },
+            body: JSON.stringify({
+                "Cart": cart
+            })
+        }).then((response) => {
+            if (response.status >= 200 && response.status < 300) {
+                this.update(cart, productID, productSize, productPrice);
+            }
         });
     }
 }
 
-function initializeFavorites(account) {
-    const favorites = account.Favorites;
+// Favorites
+class Favorites {
+    async initialize(account) { // Initialize Favorites
+        const uid = account ? account.UID : localStorage.getItem('accountID');
+        const favorites = account.Favorites ? account.Favorites : [];
         
-    function updateFavorites(favorites, productID = false, productPrice = false) {
-        const favoritesItem = document.querySelectorAll('.favorites-item[data-product-id="' + productID + '"]')[0];
-
-        document.querySelector('.favorites-items').removeChild(favoritesItem);
-    }
-
-    if (favorites) {
         let favoritesCount = favorites.length;
 
         favorites.forEach((productFavorites) => {
@@ -296,112 +313,25 @@ function initializeFavorites(account) {
 
             document.querySelector('.favorites-items').innerHTML = '';
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', `http://localhost:8081/api/products/${productFavorites.ID}`);
-            xhr.send();
+            fetch(`http://localhost:8081/api/products/${productFavorites.ID}`)
+            .then(response => response.json())
+            .then(product => {
+                this.createItem(product, productFavorites);
 
-            xhr.onload = function() {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    const product = JSON.parse(xhr.response);
-
-                    let favoritesItem = document.createElement('div');
-                    favoritesItem.classList.add('favorites-item');
-                    favoritesItem.setAttribute('data-product-id', productFavorites.ID);
-                    favoritesItem.setAttribute('data-product-price', product.Price);
-
-                    let favoritesImage = document.createElement('img');
-                    favoritesImage.classList.add('favorites-image', 'col-4');
-                    favoritesImage.src = product.Images[0];
-                    favoritesImage.alt = product.Name;
-
-                    let favoritesContent = document.createElement('div');
-                    favoritesContent.classList.add('favorites-content');
-
-                    let favoritesHeader = document.createElement('div');
-                    favoritesHeader.classList.add('favorites-header');
-
-                    let favoritesTitle = document.createElement('h3');
-                    favoritesTitle.classList.add('favorites-title');
-                    favoritesTitle.innerHTML = '<a href="/product.html?id=' + productFavorites.ID + '">' + product.Name + '</a>'
-
-                    let favoritesRemove = document.createElement('button');
-                    favoritesRemove.classList.add('favorites-remove', 'favorites-remove-item');
-                    favoritesRemove.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-                    favoritesRemove.setAttribute('data-product-id', productFavorites.ID);
-
-                    favoritesHeader.appendChild(favoritesTitle);
-                    favoritesHeader.appendChild(favoritesRemove);
-
-                    let favoritesPrice = document.createElement('h3');
-                    favoritesPrice.classList.add('favorites-price');
-                    favoritesPrice.innerHTML = "€" + (product.Price / 100);
-
-                    favoritesContent.appendChild(favoritesHeader);
-                    favoritesContent.appendChild(favoritesPrice);
-
-                    favoritesItem.appendChild(favoritesImage);
-                    favoritesItem.appendChild(favoritesContent);
-
-                    document.querySelector('.favorites-items').appendChild(favoritesItem);
-
-                    let total = 0;
-                    document.querySelectorAll('.favorites-price').forEach((element) => {
-                        total += parseFloat(element.innerHTML.replace('€', ''));
+                // Remove Item
+                document.querySelectorAll('.favorites-remove-item').forEach((element) => {
+                    element.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        this.removeItem(event, uid);
                     });
+                });
 
-                    document.querySelectorAll('.favorites-remove-item').forEach((element) => {
-                        element.addEventListener('click', (event) => {
-                            event.preventDefault();
-                            let btn = event.target.closest('.favorites-remove-item');
+                let btnAddToFavorites = document.querySelector('.product-add-to-favorites[data-product-id="' + productFavorites.ID + '"]');
 
-                            const xhrAccount = new XMLHttpRequest();
-                            xhrAccount.open('POST', 'http://localhost:8081/api/accounts/login/uid');
-                            xhrAccount.setRequestHeader('Content-Type', 'application/json');
-            
-                            xhrAccount.send(JSON.stringify({UID: localStorage.getItem('accountID')}));
-                            
-                            xhrAccount.onload = function() {
-                                if (xhrAccount.status >= 200 && xhrAccount.status < 300) {
-                                    let account = JSON.parse(xhrAccount.response);
-
-                                    let favorites = account.Favorites;
-                                    let favoritesNew = [];
-                                    let productID = btn.getAttribute('data-product-id');
-                                    let productPrice = btn.closest('.favorites-item').getAttribute('data-product-price');
-                
-                                    favorites.forEach((productFavorites) => {
-                                        if (productFavorites.ID !== productID) {
-                                            favoritesNew.push(productFavorites);
-                                        }
-                                    });
-                                    
-                                    account.Favorites = favoritesNew;
-                
-                                    let xhr = new XMLHttpRequest();
-                                    xhr.open('PUT', `http://localhost:8081/api/favorites/update`);
-                                    xhr.setRequestHeader('Content-Type', 'application/json');
-                                    xhr.send(JSON.stringify({
-                                        "Account": account,
-                                        "Favorites": favoritesNew
-                                    }));
-                
-                                    xhr.onload = function() {
-                                        if (xhr.status >= 200 && xhr.status < 300) {
-                                            updateFavorites(favoritesNew, productID, productPrice);
-                                        }
-                                    };
-                                }
-                            };
-                        });
-                    });
-
-                    let btnAddToFavorites = document.querySelector('.product-add-to-favorites[data-product-id="' + productFavorites.ID + '"]');
-
-                    if (btnAddToFavorites) {
-                        btnAddToFavorites.classList.add('product-added-to-favorites');
-                    }
+                if (btnAddToFavorites) {
+                    btnAddToFavorites.classList.add('product-added-to-favorites');
                 }
-            };
+            });
         });
 
         if (favoritesCount > 0) {
@@ -410,6 +340,97 @@ function initializeFavorites(account) {
             document.querySelector('.favorites-empty').style.display = 'block';
         }
     }
+
+    async addProduct(productID, product, accountID) { // Add Product
+        fetch('http://localhost:8081/api/accounts/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + accountID
+            },
+            body: JSON.stringify({})
+        }).then(response => response.json())
+        .then(account => {
+            let favorites = account.Favorites ? account.Favorites : [];
+            let productInFavorites = favorites.filter(product => product.ID === productID)[0];
+
+            if (productInFavorites) {
+                return;
+            } else {
+                favorites.push({
+                    "ID": productID,
+                    "Name": product.Name
+                });
+            }
+
+            account.Favorites = favorites;
+            
+            this.update(favorites, accountID);
+            this.initialize(account);
+        });
+    }
+
+    update(favorites, uid) { // Update Favorites
+        fetch('http://localhost:8081/api/accounts/favorites/update', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + uid
+            },
+            body: JSON.stringify({
+                "Favorites": favorites
+            })
+        });
+    }
+
+    async createItem(product, productFavorites) { // Create Favorites Item
+        let favoritesItemHTML = `
+        <div class="favorites-item" data-product-id="${productFavorites.ID}" data-product-price="${product.Price}">
+            <img class="favorites-image col-4" src="${product.Images[0]}" alt="${product.Name}">
+            
+            <div class="favorites-content">
+                <div class="favorites-header">
+                    <h3 class="favorites-title"><a href="/product.html?id=${productFavorites.ID}">${product.Name}</a></h3>
+                    <button class="favorites-remove favorites-remove-item" data-product-id="${productFavorites.ID}"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <h3 class="favorites-price">€${(product.Price / 100)}</h3>
+            </div>
+        </div>
+        `;
+
+        document.querySelector('.favorites-items').innerHTML += favoritesItemHTML;
+    }
+
+    async removeItem(event, uid) { // Remove Item
+        let btn = event.target.closest('.favorites-remove-item');
+
+        fetch(`http://localhost:8081/api/accounts/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + uid
+            }
+        }).then(response => response.json())
+        .then(account => {
+            let favorites = account.Favorites;
+            let favoritesNew = [];
+            let productID = btn.getAttribute('data-product-id');
+        
+            favorites.forEach((productFavorites) => {
+                if (productFavorites.ID !== productID) {
+                    favoritesNew.push(productFavorites);
+                }
+            });
+            
+            account.Favorites = favoritesNew;
+
+            // Update Favorites
+            const favoritesItem = document.querySelectorAll('.favorites-item[data-product-id="' + productID + '"]')[0];
+            document.querySelector('.favorites-items').removeChild(favoritesItem);
+            
+            this.update(favoritesNew, uid)
+        });
+    }
 }
 
 function getAccount(email, password, relogin = false) {
@@ -417,39 +438,36 @@ function getAccount(email, password, relogin = false) {
         signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
             const accountID = userCredential['user']['uid'];
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'http://localhost:8081/api/accounts/login');
-            xhr.setRequestHeader('Content-Type', 'application/json');
             
-            xhr.send(JSON.stringify({UID: accountID}));
-            xhr.onload = function() {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    if (relogin) {
-                        resolve(JSON.parse(xhr.response));
-                    }
-                    resolve(accountID);
-                } else {
-                    reject(xhr.response);
+            const response = fetch(`http://localhost:8081/api/accounts/login/uid`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + accountID
+                },
+                body: JSON.stringify({})
+            }).then(async (response) => {
+                if (relogin) {
+                    resolve(await response.json());
                 }
-            }
+                resolve(accountID);
+            });
         });
     });
 }
 
 function getAccountByID(accountID) {
     return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `http://localhost:8081/api/accounts/login/uid`);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({UID: accountID}));
-
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                resolve(JSON.parse(xhr.response));
-            } else {
-                reject(xhr.response);
-            }
-        }
+        fetch(`http://localhost:8081/api/accounts/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + accountID
+            },
+            body: JSON.stringify({})
+        }).then(async (response) => {
+            resolve(await response.json());
+        });
     });
 }
 
@@ -479,17 +497,20 @@ function register(account) {
     .then((userCredential) => {
         const accountID = userCredential['user']['uid'];
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'http://localhost:8081/api/accounts/register');
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        
-        xhr.send(JSON.stringify({UID: accountID, Account: account}));
-
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
+        fetch('http://localhost:8081/api/accounts/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                'UID': accountID,
+                'Account': account
+            })
+        }).then(async (response) => {
+            if (response.status >= 200 && response.status < 300) {
                 window.location.href = '/index.html';
             }
-        };
+        });
     })
     .catch((error) => {
         if (error.code === 'auth/email-already-in-use') {
@@ -499,30 +520,19 @@ function register(account) {
 }
 
 if (storedAccount) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://localhost:8081/api/accounts/login');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    
-    xhr.send(JSON.stringify({UID: storedAccount}));
-
-    xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            const account = JSON.parse(xhr.response);
-            
-            navAccount.forEach((element) => {
-                element.style.display = 'block';
-            });
-            navLogin.forEach((element) => {
-                element.style.display = 'none';
-            });
-            
-            document.querySelector('.account-user .nav-link').innerHTML += account['Forname'];
-            initializeCart(account);
-            initializeFavorites(account);
-        } else {
-            new Toast('email-exists').show();
-        }
-    };
+    getAccountByID(storedAccount).then(async (account) => {
+        navAccount.forEach((element) => {
+            element.style.display = 'block';
+        });
+        navLogin.forEach((element) => {
+            element.style.display = 'none';
+        });
+        
+        document.querySelector('.account-user .nav-link').innerHTML += account['Forname'];
+        
+        new Cart().initialize(account);
+        new Favorites().initialize(account);
+    });
 } else {
     navAccount.forEach((element) => {
         element.style.display = 'none';
@@ -638,4 +648,4 @@ logoutBtn.forEach((element) => {
     });
 });
 
-export { initializeCart, initializeFavorites, getAccount, getAccountByID }
+export { Cart, Favorites, getAccount, getAccountByID };

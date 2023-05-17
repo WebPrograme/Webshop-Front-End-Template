@@ -1,19 +1,78 @@
 import { getAccount, getAccountByID } from './account.js';
 
+function createOrderProducts(orderItem, products, order) {
+    let orderItemProducts = orderItem.querySelector('.order-item-products');
+    
+    products.forEach((product, index) => {
+        Object.keys(product['Sizes']).forEach(size => {
+            let orderItemProduct = document.createElement('a');
+            orderItemProduct.classList.add('order-item-product');
+            orderItemProduct.href = `/pages/product.html?id=${order.Products[index].ID}`;
+            
+            let orderItemProductHTML = `
+            <img class="order-item-product-image" src="${product.Images[0]}">
+            <h3 class="order-item-product-title">${size}</h3>`;
+            
+            if (order.Products[index]['Sizes'][size]['Quantity'] > 1) {
+                orderItemProductHTML += `<h3 class="order-item-product-quantity">x${order.Products[index]['Sizes'][size]['Quantity']}</h3>`;
+            }
+
+            orderItemProduct.innerHTML = orderItemProductHTML;
+            orderItemProducts.appendChild(orderItemProduct);
+        });
+    });
+
+    return orderItem;
+}
+
+function createOrder(account, order, products) {
+    let orderItem = document.createElement('div');
+    orderItem.classList.add('order-item');
+
+    let orderItemHTML = `
+        <img class="order-item-image col-3" src="${products[0].Images[0]}">
+        
+        <div class="order-item-content col-9">
+            <div class="order-item-header">
+                <h3 class="order-item-title">Order <span class="order-item-id">${order.ID}</span></h3>
+                <h3 class="order-item-status">${order.Status}</h3>
+            </div>
+
+        <div class="flex justify-between">
+            <h3 class="order-item-date">${order.Date}</h3>
+            <h3 class="order-item-price">€${(order.Price / 100).toFixed(2)}</h3>
+        </div>
+        
+        <div class="order-item-shipment">
+            <div class="flex justify-between">
+                <p class="order-item-adress">${order.Shipment.Street + ' ' + order.Shipment.Number}</p>
+                <p class="order-item-city">${order.Shipment.City + ' ' + order.Shipment.PostalCode}</p>
+            </div>
+
+            <p class="order-item-name">${order.Shipment.FirstName + ' ' + order.Shipment.LastName}</p>
+        </div>
+
+        <a class="order-item-see-more" order-id="${order.ID}"><i class="fa-solid fa-chevron-down"></i></a>
+        
+        <div class="order-item-products"></div>`;
+
+    orderItem.innerHTML = orderItemHTML;
+
+    return createOrderProducts(orderItem, products, order);
+}
+
 function showOrders(account, orderID = null) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `http://localhost:8081/api/orders/get`);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-
-    let requestData = {
-        "Token": account
-    }
-
-    xhr.send(JSON.stringify(requestData));
-
-    xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            let orders = JSON.parse(xhr.responseText);
+    fetch('http://localhost:8081/api/orders/get', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + account,
+        },
+        body: JSON.stringify({}),
+    }).then(async response => {
+        if (response.status === 200) {
+            let orderPromises = [];
+            let orders = await response.json();
             let ordersList = document.querySelector('.order-list');
 
             if (orderID) {
@@ -23,167 +82,43 @@ function showOrders(account, orderID = null) {
                 }
             }
 
-            Object.values(orders).forEach((order, index) => {
-                let orderItem = document.createElement('div');
-                orderItem.classList.add('order-item');
+            Object.values(orders).forEach(async (order, index) => {
+                orderPromises.push(new Promise(async (resolve, reject) => {
+                    let productPromises = [];
 
-                let orderItemImage = document.createElement('img');
-                orderItemImage.classList.add('order-item-image', 'col-3');
+                    Object.values(order.Products).forEach(async (product, index) => {
+                        productPromises.push(new Promise(async (resolve, reject) => {
+                            fetch(`http://localhost:8081/api/products/${product.ID}`)
+                            .then(response => response.json())
+                            .then(product => resolve(product));
+                        }));
+                    });
 
-                let orderProductID = order.Products[0]['ID'];
+                    Promise.all(productPromises).then(products => {
+                        let orderItem = createOrder(account, order, products);
+                        ordersList.appendChild(orderItem);
+                        resolve();
+                    });
+                }));
+            });
 
-                const xhr2 = new XMLHttpRequest();
-                xhr2.open('GET', `http://localhost:8081/api/products/${orderProductID}`);
-                xhr2.send();
+            Promise.all(orderPromises).then(() => {
+                document.querySelectorAll('.order-item-see-more').forEach((orderItemSeeMore) => {
+                    orderItemSeeMore.addEventListener('click', function(e) {
+                        let orderItemProducts = this.parentElement.querySelector('.order-item-products');
+                        let orderItemSeeMoreIcon = this.querySelector('i');
 
-                xhr2.onload = function() {
-                    if (xhr2.status >= 200 && xhr2.status < 300) {
-                        const product = JSON.parse(xhr2.responseText);
-                        
-                        orderItemImage.src = product.Images[0];
+                        orderItemProducts.classList.add('open');
+                        orderItemSeeMoreIcon.classList.add('open');
 
-                        let orderItemContent = document.createElement('div');
-                        orderItemContent.classList.add('order-item-content', 'col-9');
-
-                        let orderItemHeader = document.createElement('div');
-                        orderItemHeader.classList.add('order-item-header');
-
-                        let orderItemTitle = document.createElement('h3');
-                        orderItemTitle.classList.add('order-item-title');
-                        orderItemTitle.innerHTML = 'Order <span class="order-item-id">' + order.ID + '</span>';
-
-                        let orderItemStatus = document.createElement('h3');
-                        orderItemStatus.classList.add('order-item-status');
-                        orderItemStatus.innerHTML = order.Status;
-
-                        let orderItemSubContent = document.createElement('div');
-                        orderItemSubContent.classList.add('flex', 'justify-between');
-
-                        let orderItemDate = document.createElement('h3');
-                        orderItemDate.classList.add('order-item-date');
-                        orderItemDate.innerHTML = order.Date;
-
-                        let orderItemPrice = document.createElement('h3');
-                        orderItemPrice.classList.add('order-item-price');
-                        orderItemPrice.innerHTML = '€' + (order.Price / 100).toFixed(2);
-                        
-                        let orderItemShimpent = document.createElement('div');
-                        orderItemShimpent.classList.add('order-item-shipment');
-
-                        let orderItemShimpentTarget = document.createElement('div');
-                        orderItemShimpentTarget.classList.add('flex', 'justify-between');
-
-                        let orderItemAdress = document.createElement('p');
-                        orderItemAdress.classList.add('order-item-adress');
-                        orderItemAdress.innerHTML = order.Shipment.Street + ' ' + order.Shipment.Number;
-
-                        let orderItemCity = document.createElement('p');
-                        orderItemCity.classList.add('order-item-city');
-                        orderItemCity.innerHTML = order.Shipment.City + ' ' + order.Shipment.PostalCode;
-
-                        let orderItemName = document.createElement('p');
-                        orderItemName.classList.add('order-item-name');
-                        orderItemName.innerHTML = order.Shipment.FirstName + ' ' + order.Shipment.LastName;
-
-                        let orderItemSeeMore = document.createElement('a');
-                        orderItemSeeMore.classList.add('order-item-see-more');
-                        orderItemSeeMore.setAttribute('order-id', order.ID);
-                        orderItemSeeMore.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
-
-                        let orderItemProducts = document.createElement('div');
-                        orderItemProducts.classList.add('order-item-products');
-
-                        let orderProducts = order.Products;
-                        let promises = [];
-
-                        for (let orderProduct of orderProducts) {
-                            promises.push(new Promise((resolve, reject) => {
-                                const xhr = new XMLHttpRequest();
-                                xhr.open('GET', `http://localhost:8081/api/products/${orderProduct.ID}`);
-                                xhr.send();
-            
-                                xhr.onload = function() {
-                                    if (xhr.status >= 200 && xhr.status < 300) {
-                                        for (let size in orderProduct.Sizes) {
-                                            const product = JSON.parse(xhr.responseText);
-                                            
-                                            let orderItemProduct = document.createElement('a');
-                                            orderItemProduct.classList.add('order-item-product');
-                                            orderItemProduct.setAttribute('href', '/pages/product.html?id=' + orderProduct.ID);
-                
-                                            let orderItemProductImage = document.createElement('img');
-                                            orderItemProductImage.classList.add('order-item-product-image');
-                                            orderItemProductImage.src = product.Images[0];
-
-                                            let orderItemProductQuantity = document.createElement('h3');
-                                            orderItemProductQuantity.classList.add('order-item-product-quantity');
-                                            orderItemProductQuantity.innerHTML = 'x' + orderProduct.Sizes[size]['Quantity'];
-
-                                            let orderItemProductTitle = document.createElement('h3');
-                                            orderItemProductTitle.classList.add('order-item-product-title');
-                                            orderItemProductTitle.innerHTML = size;
-
-                                            orderItemProduct.append(orderItemProductImage)
-                                            orderItemProduct.append(orderItemProductTitle)
-
-                                            if (orderProduct.Sizes[size]['Quantity'] > 1) {
-                                                orderItemProduct.append(orderItemProductQuantity)
-                                            }
-
-                                            orderItemProducts.appendChild(orderItemProduct);
-                                        }
-
-                                        resolve();
-                                    } else {
-                                        reject();
-                                    }
-                                }
-                            }));
-                        }
-
-                        Promise.all(promises).then(() => {
-                            orderItemHeader.appendChild(orderItemTitle);
-                            orderItemHeader.appendChild(orderItemStatus);
-
-                            orderItemSubContent.appendChild(orderItemDate);
-                            orderItemSubContent.appendChild(orderItemPrice);
-
-                            orderItemShimpentTarget.appendChild(orderItemAdress);
-                            orderItemShimpentTarget.appendChild(orderItemCity);
-
-                            orderItemShimpent.appendChild(orderItemShimpentTarget);
-                            orderItemShimpent.appendChild(orderItemName);
-            
-                            orderItemContent.appendChild(orderItemHeader);
-                            orderItemContent.appendChild(orderItemSubContent);
-                            orderItemContent.appendChild(orderItemShimpent);
-                            orderItemContent.appendChild(orderItemSeeMore);
-                            orderItemContent.appendChild(orderItemProducts);
-
-                            orderItem.appendChild(orderItemImage);
-                            orderItem.appendChild(orderItemContent);
-            
-                            ordersList.appendChild(orderItem);
-
-                            document.querySelectorAll('.order-item-see-more').forEach((orderItemSeeMore) => {
-                                orderItemSeeMore.addEventListener('click', function(e) {
-                                    let orderItemProducts = this.parentElement.querySelector('.order-item-products');
-                                    let orderItemSeeMoreIcon = this.querySelector('i');
-
-                                    orderItemProducts.classList.add('open');
-                                    orderItemSeeMoreIcon.classList.add('open');
-
-                                    document.querySelectorAll('.order-item-products').forEach((orderItemProduct) => {
-                                        if (orderItemProduct !== orderItemProducts) {
-                                            orderItemProduct.classList.remove('open');
-                                            orderItemProduct.parentElement.querySelector('.order-item-see-more i').classList.remove('open');
-                                        }
-                                    });
-                                });
-                            });
+                        document.querySelectorAll('.order-item-products').forEach((orderItemProduct) => {
+                            if (orderItemProduct !== orderItemProducts) {
+                                orderItemProduct.classList.remove('open');
+                                orderItemProduct.parentElement.querySelector('.order-item-see-more i').classList.remove('open');
+                            }
                         });
-                    }
-                }
+                    });
+                });
             });
         } else {
             let ordersList = document.querySelector('.order-list');
@@ -194,7 +129,9 @@ function showOrders(account, orderID = null) {
 
             ordersList.appendChild(noOrders);
         }
-    }
+    }).catch((error) => {
+        console.log(error);
+    });
 }
 
 let relogin = document.querySelector('.relogin-form');

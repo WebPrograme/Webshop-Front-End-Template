@@ -152,7 +152,7 @@
                     <h3 class="order-footer-total-title">Total</h3>
                     <h3 class="order-footer-total-price">€ 0.00</>
                 </div>
-                <button class="btn btn-primary btn-lg order-btn">Order</button>
+                <button class="btn btn-primary btn-lg order-btn" data-step-btn="1">Order</button>
             </div>
         </div>
 
@@ -203,18 +203,18 @@
                 </div>
             </div>
 
-            <a href="#" class="btn btn-primary btn-lg shipment-btn">Continue</a>
+            <a href="#" class="btn btn-primary btn-lg shipment-btn checkout-step-btn" data-step-btn="2">Continue</a>
         </div>
 
         <div class="col-8 flex m-inline-auto column payment checkout-step-content" step-content="3">
             <h3 class="text-center checkout-step-content-title">Choose a Method</h3>
 
             <div class="payment-methods">
-                <a href="#" class="btn btn-secondary" method="Payconiq">
+                <a href="#" class="btn btn-secondary" method="Payconiq" data-step-btn="3">
                     <img src="/img/payconiq-horizontal-pos.png">
                 </a>
 
-                <a href="#" class="btn btn-secondary" method="Stripe">
+                <a href="#" class="btn btn-secondary" method="Stripe" data-step-btn="3">
                     <i class="fa-brands fa-stripe"></i>
                 </a>
             </div>

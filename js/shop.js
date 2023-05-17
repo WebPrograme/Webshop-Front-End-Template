@@ -9,7 +9,7 @@ const firebaseConfig = {
     messagingSenderId: "258327241295",
     appId: "1:258327241295:web:a2578cd574ad30f1c0c03a",
     measurementId: "G-W73DFZVRY4"
-  };
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -17,14 +17,9 @@ const storage = getStorage(app);
 
 const shop = document.querySelector('.shop-container');
 
-let xhr = new XMLHttpRequest();
-
-xhr.open('GET', 'http://localhost:8081/api/products');
-xhr.send();
-
-xhr.onload = function() {
-    const products = JSON.parse(xhr.response);
-
+fetch('http://localhost:8081/api/products')
+.then(response => response.json())
+.then(products => {
     let searchCategory = new URLSearchParams(window.location.search).get('category');
     let categoryCells = []
 
@@ -32,138 +27,105 @@ xhr.onload = function() {
         const product = products[productID];
 
         let sizes = Object.keys(product.Sizes).map(size => parseInt(product.Sizes[size].Stock));
-
         if (sizes.every(size => size === 0)) continue;
 
-        let productCard = document.createElement('a');
-        productCard.classList.add('card', 'product-card');
-        productCard.setAttribute('data-search', 'true');
-        productCard['href'] = `product.html?id=${productID}`;
-
-        let productCardCategories = document.createElement('div');
-        productCardCategories.classList.add('card-categories');
-
-        if (product.Categories !== undefined) {
-            Object.keys(product.Categories).forEach(category => {
-                productCard.setAttribute(`data-${category}`, product.Categories[category])
-
-                let productCategory = document.createElement('div');
-                productCategory.classList.add('product-category');
-                productCategory.style.backgroundColor = '#' + product.Categories[category];
-        
-                let productCategoryLabel = document.createElement('span');
-                productCategoryLabel.innerHTML = category;
-    
-                productCategory.appendChild(productCategoryLabel);
-    
-                categoryCells.push(searchCategory);
-                productCardCategories.appendChild(productCategory);
-            });
-        }
-
-        let productImageContainer = document.createElement('div');
-        productImageContainer.classList.add('card-image-container');
-
-        let productImage = document.createElement('img');
-        productImage.classList.add('card-image');
-        productImage.src = product.Images[0];
-        productImage.alt = product.Name;
-
-        let productCardSizes = document.createElement('div');
-        productCardSizes.classList.add('card-sizes');
-        productCardSizes.innerHTML = '<h4>' + sortSizes(Object.keys(product.Sizes)).join(' | ') + '</h4>';
-
-        let productCardBody = document.createElement('div');
-        productCardBody.classList.add('card-body');
-
-        let productCardHeader = document.createElement('div');
-        productCardHeader.classList.add('card-header', 'flex', 'justify-between', 'align-center');
-
-        let productCardTitle = document.createElement('h3');
-        productCardTitle.classList.add('card-title');
-        productCardTitle.innerHTML = product.Name;
-
-        let productCardPrice = document.createElement('p');
-        productCardPrice.classList.add('card-text', 'card-price', 'text-muted');
-        productCardPrice.innerHTML = `€${(product.Price / 100).toFixed(2)}`;
-        if (product.SaleOldPrice !== undefined) productCardPrice.classList.add('card-sale-price');
-
-        let productCardButton = document.createElement('button');
-        productCardButton.classList.add('btn', 'btn-primary');
-        productCardButton.innerHTML = 'Add to cart';
-
-        productCardHeader.appendChild(productCardTitle);
-        productCardHeader.appendChild(productCardPrice)
-        productCardBody.appendChild(productCardHeader);
-        productCardBody.appendChild(productCardCategories);
-
-        productImageContainer.appendChild(productImage);
-        productImageContainer.appendChild(productCardSizes);
-
-        productCard.appendChild(productImageContainer);
-        productCard.appendChild(productCardBody);
-
-        if (product.SalePercent !== undefined) {
-            let productCardSalePercent = document.createElement('h3');
-            productCardSalePercent.classList.add('card-sale-percent');
-            productCardSalePercent.innerHTML = `-${product.SalePercent}%`;
-
-            productCardBody.appendChild(productCardSalePercent);
-        }
-        
+        let productCard = createItem(product, productID);
         shop.appendChild(productCard);
     }
 
-    const xhr2 = new XMLHttpRequest();
-    xhr2.open('GET', 'http://localhost:8081/api/categories');
-    xhr2.send();
+    fetch('http://localhost:8081/api/categories')
+    .then(response => response.json())
+    .then(categories => {
+        let searchedProducts = [];
 
-    xhr2.onload = function() {
-        if (xhr2.status === 200) {
-            let categories = JSON.parse(xhr2.response);
-            let searchedProducts = [];
+        for (let category in categories) {
+            let dropdownItem = document.createElement('div');
+            dropdownItem.classList.add('dropdown-item', 'category-item', 'input-line');
 
-            for (let category in categories) {
-                let dropdownItem = document.createElement('div');
-                dropdownItem.classList.add('dropdown-item', 'category-item', 'input-line');
+            let dropdownItemInput = document.createElement('input');
+            dropdownItemInput.classList.add('input', 'input-checkbox', 'search-category-input');
+            dropdownItemInput.setAttribute('type', 'checkbox');
+            dropdownItemInput.setAttribute('id', category);
 
-                let dropdownItemInput = document.createElement('input');
-                dropdownItemInput.classList.add('input', 'input-checkbox', 'search-category-input');
-                dropdownItemInput.setAttribute('type', 'checkbox');
-                dropdownItemInput.setAttribute('id', category);
+            let dropdownItemLabel = document.createElement('label');
+            dropdownItemLabel.setAttribute('for', category);
+            dropdownItemLabel.innerHTML = category;
 
-                let dropdownItemLabel = document.createElement('label');
-                dropdownItemLabel.setAttribute('for', category);
-                dropdownItemLabel.innerHTML = category;
+            dropdownItem.appendChild(dropdownItemInput);
+            dropdownItem.appendChild(dropdownItemLabel);
 
-                dropdownItem.appendChild(dropdownItemInput);
-                dropdownItem.appendChild(dropdownItemLabel);
-
-                document.querySelector('#search-categories-dropdown').appendChild(dropdownItem);
-            }
-        
-            if (categoryCells.includes(searchCategory) && searchCategory !== null) {
-                document.querySelector('.search-category-input#' + searchCategory).checked = true;
-                document.querySelector('#search-category-all').checked = false;
-                document.querySelector('#search-category-all').disabled = false;
-
-                filterByCategory(document.querySelectorAll('.product-card'), document.querySelector('.search-category-input#' + searchCategory));
-            }
-
-            document.querySelectorAll('.product-card').forEach(card => {
-                if (card.getAttribute('data-search')) {
-                    searchedProducts.push(card);
-                }
-            });
-            
-            document.querySelectorAll('.search-category-input').forEach(categoryInput => {
-                categoryInput.addEventListener('change', function() {
-                    filterByCategory(searchedProducts, categoryInput);
-                });
-            });
+            document.querySelector('#search-categories-dropdown').appendChild(dropdownItem);
         }
+    
+        if (categoryCells.includes(searchCategory) && searchCategory !== null) {
+            document.querySelector('.search-category-input#' + searchCategory).checked = true;
+            document.querySelector('#search-category-all').checked = false;
+            document.querySelector('#search-category-all').disabled = false;
+
+            filterByCategory(document.querySelectorAll('.product-card'), document.querySelector('.search-category-input#' + searchCategory));
+        }
+
+        document.querySelectorAll('.product-card').forEach(card => {
+            if (card.getAttribute('data-search')) {
+                searchedProducts.push(card);
+            }
+        });
+        
+        document.querySelectorAll('.search-category-input').forEach(categoryInput => {
+            categoryInput.addEventListener('change', function() {
+                filterByCategory(searchedProducts, categoryInput);
+            });
+        });
+    });
+});
+
+function createItem(product, productID) {
+    let productItem = document.createElement('a');
+    productItem.classList.add('card', 'product-card');
+    productItem.setAttribute('data-search', 'true');
+    productItem['href'] = `product.html?id=${productID}`;
+
+    let productItemHTML = `
+    <div class="card-image-container">
+        <img class="card-image" src="${product.Images[0]}" alt="${product.Name}">
+        
+        <div class="card-sizes">
+            <h4>${sortSizes(Object.keys(product.Sizes)).join(' | ')}</h4>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="card-header flex justify-between align-center">
+            <h3 class="card-title">${product.Name}</h3><p class="card-text card-price text-muted">€${(product.Price / 100).toFixed(2)}</p>
+        </div>
+        
+        <div class="card-categories">
+        </div>
+    </div>
+    `;
+
+    productItem.innerHTML = productItemHTML;
+
+    if (product.Categories !== undefined) {
+        Object.keys(product.Categories).forEach(category => {
+            productItem.setAttribute(`data-${category}`, product.Categories[category])
+
+            let productItemCategoryHTML = `<div class="product-category" style="background-color: #${product.Categories[category]}"><span>${category}</span></div>`;
+            productItem.querySelector('.card-categories').innerHTML += productItemCategoryHTML;
+        });
     }
-};
+
+    if (product.SalePercent !== undefined) {
+        let productCardSalePercent = document.createElement('h3');
+        productCardSalePercent.classList.add('card-sale-percent');
+        productCardSalePercent.innerHTML = `-${product.SalePercent}%`;
+
+        productItem.querySelector('.card-body').appendChild(productCardSalePercent);
+        productItem.querySelector('.card-price').classList.add('card-sale-price');
+    }
+
+    return productItem;
+}
 
 function filterByCategory(cards, newCategoryInput = null) {
     let allCategories = [];
