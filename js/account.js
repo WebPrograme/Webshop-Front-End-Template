@@ -73,7 +73,7 @@ class Cart {
                 if (response.status === 200) {
                     document.querySelector('.cart-count').innerHTML = cart.length;
     
-                    const toast = new Toast('added-to-cart-success');
+                    const toast = new Toast('Added to Cart!', 'success');
                     toast.show();
 
                     this.initialize(account);
@@ -221,7 +221,7 @@ class Cart {
                 </div>
                 
                 <div class="cart-quantity">
-                    <input class="cart-quantity-input input w-min" data-product-id="${productCart.ID}" data-product-price="${product.Price}" data-product-size="${size}" value="1" min="1" max="${product.Sizes[size].Stock}" type="number">
+                    <input class="cart-quantity-input input w-min" data-product-id="${productCart.ID}" data-product-price="${product.Price}" data-product-size="${size}" value="${productCart.Sizes[size]['Quantity']}" min="1" max="${product.Sizes[size].Stock}" type="number">
                     <h3 class="cart-price">€${(product.Price / 100) * productCart.Sizes[size].Quantity}</h3>
                 </div>
             </div>
@@ -367,7 +367,7 @@ class Favorites {
             this.update(favorites, accountID);
             this.initialize(account);
 
-            new Toast('added-to-favorites-success').show();
+            new Toast('Added to Favorites', 'success').show();
         });
     }
 
@@ -461,6 +461,8 @@ class Account {
                 navLogin.forEach((element) => {
                     element.style.display = 'block';
                 });
+
+                this.skeleton();
             });
         }
     }
@@ -478,6 +480,8 @@ class Account {
                 body: JSON.stringify({})
             }).then(async (response) => {
                 resolve(await response.json());
+            }).catch((error) => {
+                reject(error);
             });
         });
     }
@@ -530,7 +534,7 @@ class Account {
             })
             .catch((error) => {
                 if (error.code === 'auth/email-already-in-use') {
-                    new Toast('email-exists').show();
+                    new Toast('Wrong Email/Password', 'error').show();
                 }
             });
         });
@@ -539,11 +543,17 @@ class Account {
     async skeleton() { // Skeleton
         const navLink = document.querySelector('.account-login .nav-link');
 
+        if (navLink.innerHTML === '<div class="login-skeleton"></div>') {
+            navLink.innerHTML = 'Login';
+            return;
+        }
+
         navLink.innerHTML = `<div class="login-skeleton"></div>`;
     }
 }
 
-const account = new Account().initialize();
+const account = new Account();
+account.initialize();
 
 if (loginBtn) {
     loginBtn.addEventListener('click', (e) => {

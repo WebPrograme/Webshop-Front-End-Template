@@ -194,7 +194,7 @@ new Account().getAccount().then(function(account) {
 
             new CheckoutSteps(checkoutStepIndex, account);
         }).catch(function(error) {
-            new Toast('login-failed').show();
+            new Toast('Wrong Email/Password', 'error').show();
         });
     });
 });
